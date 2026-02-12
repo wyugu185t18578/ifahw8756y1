@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CURSED - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #141414;
+            color: #e5e5e5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Particle canvas */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Corner light sources */
+        .light-source {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .light-top-left {
+            top: -200px;
+            left: -200px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(100, 120, 160, 0.15) 0%, rgba(100, 120, 160, 0.05) 30%, transparent 70%);
+        }
+
+        .light-bottom-right {
+            bottom: -200px;
+            right: -200px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(100, 120, 160, 0.15) 0%, rgba(100, 120, 160, 0.05) 30%, transparent 70%);
+        }
+
+        /* Main container */
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 400px;
+            padding: 50px 40px;
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Logo */
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo svg {
+            width: 80px;
+            height: 80px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 8px;
+            color: #b4bace;
+            margin-top: 15px;
+        }
+
+        /* Form styles */
+        .form-group {
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: #b4b4b4;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 0 12px 30px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #404040;
+            color: #e5e5e5;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input::placeholder {
+            color: #666;
+        }
+
+        input:focus {
+            border-bottom-color: #c8d2e6;
+        }
+
+        input:focus + .input-underline {
+            transform: scaleX(1);
+        }
+
+        .input-underline {
+            position: absolute;
+            bottom: -2px;
+            left: 30px;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #b4bace, #ffffff);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: left;
+        }
+
+        /* Button */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #2e2e2e;
+            border: none;
+            border-radius: 4px;
+            color: #d9d9d9;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn-submit:hover {
+            background: #383838;
+        }
+
+        .btn-submit:active {
+            background: #262626;
+        }
+
+        /* Loading state */
+        .btn-submit.loading {
+            position: relative;
+            color: transparent;
+            pointer-events: none;
+        }
+
+        .btn-submit.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid #666;
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Links */
+        .form-footer {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .form-footer a {
+            color: #808080;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: inline-block;
+            position: relative;
+        }
+
+        .form-footer a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #b4b4b4;
+            transition: width 0.3s ease;
+        }
+
+        .form-footer a:hover::after {
+            width: 100%;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: -300px;
+            width: 280px;
+            padding: 16px 20px;
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 4px;
+            border-left: 4px solid #3cdc64;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: right 0.4s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            right: 20px;
+        }
+
+        .notification.error {
+            border-left-color: #dc3c3c;
+        }
+
+        .notification-text {
+            color: #fff;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Corner lights -->
+    <div class="light-source light-top-left"></div>
+    <div class="light-source light-bottom-right"></div>
+
+    <!-- Particle canvas -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Main container -->
+    <div class="container">
+        <div class="logo">
+            <div class="logo-text">CURSED</div>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                <input type="text" id="username" name="username" placeholder="enter username" required autocomplete="username">
+                <div class="input-underline"></div>
+            </div>
+
+            <div class="form-group">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                </svg>
+                <input type="password" id="password" name="password" placeholder="enter password" required autocomplete="current-password">
+                <div class="input-underline"></div>
+            </div>
+
+            <button type="submit" class="btn-submit">LOGIN</button>
+        </form>
+
+        <div class="form-footer">
+            <a href="signup.html">Don't have an account? Sign up</a>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div class="notification-text"></div>
+    </div>
+
+    <script>
+        // Particle system
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 80;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = 1.5 + Math.random() * 2;
+                this.alpha = 0.1 + Math.random() * 0.3;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(160, 160, 180, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Initialize particles
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        // Draw connections
+        function drawConnections() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 120) {
+                        const alpha = (1 - dist / 120) * 0.05;
+                        ctx.strokeStyle = `rgba(120, 120, 140, ${alpha})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawConnections();
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Check if already logged in
+        async function checkSession() {
+            try {
+                const response = await fetch('/api/check-session');
+                const data = await response.json();
+                
+                if (data.loggedIn) {
+                    // Already logged in, redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (error) {
+                console.error('Session check failed:', error);
+            }
+        }
+
+        checkSession();
+
+        // Form handling
+        const form = document.getElementById('loginForm');
+        const notification = document.getElementById('notification');
+        const notificationText = notification.querySelector('.notification-text');
+
+        function showNotification(message, isError = false) {
+            notificationText.textContent = message;
+            notification.classList.toggle('error', isError);
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Show loading
+            const submitBtn = form.querySelector('.btn-submit');
+            submitBtn.classList.add('loading');
+
+            try {
+                const response = await fetch('/api/web-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('Login successful! Redirecting...', false);
+                    // Redirect to dashboard after short delay
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    showNotification(data.message || 'Login failed', true);
+                }
+            } catch (error) {
+                showNotification('Connection error. Please try again.', true);
+            } finally {
+                submitBtn.classList.remove('loading');
+            }
+        });
+    </script>
+</body>
+</html>

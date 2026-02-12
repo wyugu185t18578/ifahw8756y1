@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CURSED - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #141414;
+            color: #e5e5e5;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(30, 30, 30, 0.95);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            color: #b4bace;
+            letter-spacing: 4px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 300;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .refresh-btn {
+            padding: 10px 20px;
+            background: #2e2e2e;
+            border: none;
+            border-radius: 4px;
+            color: #d9d9d9;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #383838;
+        }
+
+        .stats {
+            color: #999;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #404040;
+        }
+
+        th {
+            background: #202020;
+            color: #b4bace;
+            font-weight: 500;
+            letter-spacing: 1px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .status-locked {
+            color: #dc3c3c;
+            font-weight: 500;
+        }
+
+        .status-free {
+            color: #3cdc64;
+            font-weight: 500;
+        }
+
+        .reset-btn {
+            padding: 6px 12px;
+            background: #dc3c3c;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #ff4444;
+        }
+
+        .reset-btn:disabled {
+            background: #404040;
+            cursor: not-allowed;
+            color: #666;
+        }
+
+        .hwid {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #999;
+        }
+
+        .date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: -300px;
+            width: 280px;
+            padding: 16px 20px;
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 4px;
+            border-left: 4px solid #3cdc64;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: right 0.4s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            right: 20px;
+        }
+
+        .notification.error {
+            border-left-color: #dc3c3c;
+        }
+
+        .notification-text {
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ADMIN PANEL</h1>
+        
+        <div class="controls">
+            <button class="refresh-btn" onclick="loadUsers()">Refresh</button>
+            <div class="stats">
+                <span id="totalUsers">0</span> users | 
+                <span id="lockedUsers">0</span> locked
+            </div>
+        </div>
+
+        <div id="tableContainer">
+            <div class="loading">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div class="notification-text"></div>
+    </div>
+
+    <script>
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            const notificationText = notification.querySelector('.notification-text');
+            
+            notificationText.textContent = message;
+            notification.classList.toggle('error', isError);
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Never';
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+
+        async function resetHWID(username) {
+            if (!confirm(`Are you sure you want to reset the hardware lock for "${username}"?\n\nThis will allow them to log in from a different computer.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/reset-hwid', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(data.message, false);
+                    loadUsers(); // Reload the table
+                } else {
+                    showNotification(data.message || 'Reset failed', true);
+                }
+            } catch (error) {
+                showNotification('Connection error. Please try again.', true);
+            }
+        }
+
+        async function loadUsers() {
+            const tableContainer = document.getElementById('tableContainer');
+            tableContainer.innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                const response = await fetch('/api/users');
+                const users = await response.json();
+
+                if (users.length === 0) {
+                    tableContainer.innerHTML = '<div class="empty">No users found</div>';
+                    document.getElementById('totalUsers').textContent = '0';
+                    document.getElementById('lockedUsers').textContent = '0';
+                    return;
+                }
+
+                const lockedCount = users.filter(u => u.isLocked).length;
+                document.getElementById('totalUsers').textContent = users.length;
+                document.getElementById('lockedUsers').textContent = lockedCount;
+
+                let tableHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Created</th>
+                                <th>Status</th>
+                                <th>Hardware ID</th>
+                                <th>Locked At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                users.forEach(user => {
+                    const statusClass = user.isLocked ? 'status-locked' : 'status-free';
+                    const statusText = user.isLocked ? 'LOCKED' : 'FREE';
+                    const hwidText = user.hwid || 'N/A';
+                    
+                    tableHTML += `
+                        <tr>
+                            <td><strong>${user.username}</strong></td>
+                            <td class="date">${formatDate(user.createdAt)}</td>
+                            <td class="${statusClass}">${statusText}</td>
+                            <td class="hwid">${hwidText}</td>
+                            <td class="date">${formatDate(user.hwidLockedAt)}</td>
+                            <td>
+                                <button 
+                                    class="reset-btn" 
+                                    onclick="resetHWID('${user.username}')"
+                                    ${!user.isLocked ? 'disabled' : ''}
+                                >
+                                    Reset Lock
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                tableContainer.innerHTML = tableHTML;
+            } catch (error) {
+                tableContainer.innerHTML = '<div class="empty">Error loading users</div>';
+                showNotification('Failed to load users', true);
+            }
+        }
+
+        // Load users when page loads
+        loadUsers();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadUsers, 30000);
+    </script>
+</body>
+</html>

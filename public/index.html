@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CURSED - Premium Software Solution</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #141414;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+
+        /* Particle canvas */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Corner light sources */
+        .light-source {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .light-top-left {
+            top: -200px;
+            left: -200px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(100, 120, 160, 0.15) 0%, rgba(100, 120, 160, 0.05) 30%, transparent 70%);
+        }
+
+        .light-bottom-right {
+            bottom: -200px;
+            right: -200px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(100, 120, 160, 0.15) 0%, rgba(100, 120, 160, 0.05) 30%, transparent 70%);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(64, 64, 64, 0.3);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 300;
+            letter-spacing: 6px;
+            color: #b4bace;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #999;
+            text-decoration: none;
+            font-size: 14px;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #b4bace;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #e5e5e5;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .btn-nav {
+            padding: 10px 24px;
+            background: #2e2e2e;
+            border: none;
+            border-radius: 4px;
+            color: #d9d9d9;
+            font-size: 13px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-nav:hover {
+            background: #383838;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 40px 80px;
+        }
+
+        .hero-content {
+            max-width: 800px;
+        }
+
+        .hero-title {
+            font-size: 72px;
+            font-weight: 300;
+            letter-spacing: 16px;
+            color: #b4bace;
+            margin-bottom: 30px;
+            text-shadow: 0 0 40px rgba(180, 186, 206, 0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: #999;
+            letter-spacing: 2px;
+            margin-bottom: 50px;
+            line-height: 1.8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%);
+            border: none;
+            border-radius: 4px;
+            color: #1a1a1a;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(180, 186, 206, 0.3);
+        }
+
+        .btn-secondary {
+            padding: 16px 40px;
+            background: transparent;
+            border: 2px solid #404040;
+            border-radius: 4px;
+            color: #d9d9d9;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            border-color: #b4bace;
+            color: #b4bace;
+            transform: translateY(-2px);
+        }
+
+        /* Trust Section */
+        .trust-section {
+            position: relative;
+            z-index: 10;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .trust-text {
+            font-size: 13px;
+            color: #666;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        .trust-stats {
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            flex-wrap: wrap;
+        }
+
+        .trust-stat {
+            text-align: center;
+        }
+
+        .trust-number {
+            font-size: 42px;
+            font-weight: 700;
+            color: #b4bace;
+            margin-bottom: 8px;
+        }
+
+        .trust-label {
+            font-size: 13px;
+            color: #666;
+            letter-spacing: 1px;
+        }
+
+        /* Features Section */
+        .features-intro {
+            position: relative;
+            z-index: 10;
+            padding: 100px 40px 60px;
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .section-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(180, 186, 206, 0.1);
+            border-radius: 50px;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #b4bace;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .section-title {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            color: #999;
+            max-width: 700px;
+            margin: 0 auto 80px;
+            line-height: 1.7;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        .feature-card {
+            background: rgba(30, 30, 30, 0.8);
+            padding: 45px 40px;
+            border-radius: 8px;
+            border: 1px solid rgba(64, 64, 64, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(180, 186, 206, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 20px;
+            color: #b4bace;
+        }
+
+        .feature-title {
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: #e5e5e5;
+            margin-bottom: 15px;
+        }
+
+        .feature-description {
+            font-size: 14px;
+            color: #999;
+            line-height: 1.8;
+        }
+
+        /* Products Section */
+        .products-section {
+            position: relative;
+            z-index: 10;
+            padding: 100px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .products-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 35px;
+        }
+
+        .product-card {
+            background: rgba(30, 30, 30, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(180, 186, 206, 0.15);
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(180, 186, 206, 0.4);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, rgba(180, 186, 206, 0.2) 0%, rgba(136, 150, 176, 0.1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(180, 186, 206, 0.1);
+        }
+
+        .product-logo {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: #b4bace;
+            text-shadow: 0 0 30px rgba(180, 186, 206, 0.5);
+        }
+
+        .product-content {
+            padding: 35px;
+        }
+
+        .product-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .product-description {
+            font-size: 14px;
+            color: #999;
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .product-features {
+            margin-bottom: 25px;
+        }
+
+        .product-feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .product-feature-item svg {
+            width: 16px;
+            height: 16px;
+            color: #b4bace;
+            flex-shrink: 0;
+        }
+
+        .product-pricing {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 25px;
+            border-top: 1px solid rgba(180, 186, 206, 0.1);
+        }
+
+        .product-price {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+
+        .price-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #b4bace;
+        }
+
+        .price-period {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .product-cta {
+            padding: 12px 24px;
+            background: rgba(180, 186, 206, 0.1);
+            border: 1px solid rgba(180, 186, 206, 0.2);
+            border-radius: 6px;
+            color: #b4bace;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .product-cta:hover {
+            background: rgba(180, 186, 206, 0.2);
+            border-color: #b4bace;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            position: relative;
+            z-index: 10;
+            padding: 80px 40px;
+            text-align: center;
+            background: rgba(30, 30, 30, 0.5);
+            border-top: 1px solid rgba(64, 64, 64, 0.3);
+            border-bottom: 1px solid rgba(64, 64, 64, 0.3);
+        }
+
+        .stats-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .stats-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 60px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 60px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #b4bace;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Testimonials Section */
+        .testimonials-section {
+            position: relative;
+            z-index: 10;
+            padding: 100px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .testimonials-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .testimonial-card {
+            background: rgba(30, 30, 30, 0.6);
+            padding: 35px;
+            border-radius: 12px;
+            border: 1px solid rgba(180, 186, 206, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .testimonial-card:hover {
+            border-color: rgba(180, 186, 206, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .testimonial-stars {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .star {
+            color: #b4bace;
+            font-size: 18px;
+        }
+
+        .testimonial-text {
+            font-size: 15px;
+            color: #ccc;
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .testimonial-author {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(180, 186, 206, 0.1);
+        }
+
+        .author-name {
+            font-size: 14px;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .author-product {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .verified-badge {
+            font-size: 11px;
+            color: #b4bace;
+            background: rgba(180, 186, 206, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        /* About Section */
+        .about-section {
+            position: relative;
+            z-index: 10;
+            padding: 100px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .about-content h2 {
+            font-size: 42px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+
+        .about-content p {
+            font-size: 16px;
+            color: #999;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .about-features {
+            display: grid;
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .about-feature {
+            display: flex;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .about-feature-icon {
+            width: 45px;
+            height: 45px;
+            background: rgba(180, 186, 206, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .about-feature-icon svg {
+            width: 24px;
+            height: 24px;
+            color: #b4bace;
+        }
+
+        .about-feature-content h4 {
+            font-size: 16px;
+            color: #ffffff;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .about-feature-content p {
+            font-size: 14px;
+            color: #999;
+            margin: 0;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            position: relative;
+            z-index: 10;
+            padding: 120px 40px;
+            text-align: center;
+        }
+
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-size: 52px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+
+        .cta-text {
+            font-size: 18px;
+            color: #999;
+            line-height: 1.8;
+            margin-bottom: 45px;
+        }
+
+        /* Footer */
+        footer {
+            position: relative;
+            z-index: 10;
+            padding: 60px 40px 40px;
+            border-top: 1px solid rgba(64, 64, 64, 0.3);
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 50px;
+        }
+
+        .footer-brand {
+            max-width: 350px;
+        }
+
+        .footer-logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 6px;
+            color: #b4bace;
+            margin-bottom: 20px;
+        }
+
+        .footer-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.7;
+        }
+
+        .footer-column h4 {
+            font-size: 14px;
+            color: #ffffff;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-links a {
+            color: #999;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #b4bace;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(64, 64, 64, 0.3);
+        }
+
+        .footer-text {
+            color: #666;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .footer-container {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 50px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 52px;
+                letter-spacing: 4px;
+            }
+
+            .nav-container {
+                padding: 20px 30px;
+            }
+
+            .nav-links {
+                gap: 25px;
+            }
+
+            .nav-links a:not(.btn-nav) {
+                display: none;
+            }
+
+            .features-grid,
+            .products-grid,
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .section-title {
+                font-size: 36px;
+            }
+
+            .cta-title {
+                font-size: 38px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Corner lights -->
+    <div class="light-source light-top-left"></div>
+    <div class="light-source light-bottom-right"></div>
+
+    <!-- Particle canvas -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">CURSED</div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#products">Products</a>
+                <a href="#testimonials">Reviews</a>
+                <a href="#about">About</a>
+                <a href="signup.html" class="btn-nav" id="authButton">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">CURSED</h1>
+            <p class="hero-subtitle">
+                Industry-leading software with unbeatable results. 
+                        Win your wagers with Confidence
+            </p>
+            <div class="hero-buttons">
+                <a href="#products" class="btn-primary">VIEW CURSED PRODUCTS</a>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Features Section -->
+    <section class="features-intro" id="features">
+        <div class="section-badge">Why Choose CURSED</div>
+        <h2 class="section-title">Built for Performance & Security</h2>
+        <p class="section-subtitle">
+            Our platform combines cutting-edge hardware authentication with seamless user experience, 
+            giving you the tools you need to succeed while keeping your account completely secure.
+        </p>
+    </section>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+            </svg>
+            <h3 class="feature-title">HARDWARE LOCKED</h3>
+            <p class="feature-description">
+                Each account is permanently bound to your unique hardware ID. Zero account sharing, maximum protection. 
+                Your license stays exactly where it should be - on your machine.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-1.48 0-2.85.43-4.01 1.17l1.46 1.46C10.21 6.23 11.08 6 12 6c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3 0 1.13-.64 2.11-1.56 2.62l1.45 1.45C23.16 18.16 24 16.68 24 15c0-2.64-2.05-4.78-4.65-4.96z"/>
+            </svg>
+            <h3 class="feature-title">USER FRIENDLY</h3>
+            <p class="feature-description">
+                User friendly interfaces. No complex logins, just pure performance. Get started in seconds with automatized tasks.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+            </svg>
+            <h3 class="feature-title">24/7 SUPPORT</h3>
+            <p class="feature-description">
+                Our dedicated support team is available around the clock to assist with any questions or issues. 
+                Fast response times and expert help whenever you need it.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
+            <h3 class="feature-title">FEEDBACKS</h3>
+            <p class="feature-description">
+                Quick and Easy feedbacks, give your ideas, your critics.
+                We're listening and always trying to improve so that YOU can have the best experience.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+            </svg>
+            <h3 class="feature-title">LIGHTNING FAST</h3>
+            <p class="feature-description">
+                Built on modern infrastructure with response times out of the ordinary. Optimized code and efficient 
+                architecture ensure your software runs at peak performance.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            <h3 class="feature-title">ALWAYS UPDATED</h3>
+            <p class="feature-description">
+                Regular updates with new features, security patches, and performance improvements. 
+                Your software evolves with the latest technology and best techniques.
+            </p>
+        </div>
+    </div>
+
+    <!-- Products Section -->
+    <section class="products-section" id="products">
+        <div class="products-header">
+            <div class="section-badge">Our Products</div>
+            <h2 class="section-title">Choose Your Plan</h2>
+            <p class="section-subtitle">
+                Premium software packages.
+            </p>
+        </div>
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="product-logo">MONTHLY</div>
+                </div>
+                <div class="product-content">
+                    <h3 class="product-name">Monthly Subscribtion</h3>
+                    <p class="product-description">
+                        Get access to CURSED BYPASS for 30 days.
+                    </p>
+                    <div class="product-features">
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Hardware-locked authentication</span>
+                        </div>
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Single device license</span>
+                        </div>
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Email support</span>
+                        </div>
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Regular updates</span>
+                        </div>
+                    </div>
+                    <div class="product-pricing">
+                        <div class="product-price">
+                            <span class="price-amount">USD$ 20</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                        <button class="product-cta btn-purchase" data-package="monthly">Get Started</button>
+                    </div>
+                </div>
+            </div>
+
+    
+
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="product-logo">LIFETIME</div>
+                </div>
+                <div class="product-content">
+                    <h3 class="product-name">Lifetime Subscribtion</h3>
+                    <p class="product-description">
+                        Get access to CURSED BYPASS forever.
+                    </p>
+                    <div class="product-features">
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Everything in Pro</span>
+                        </div>
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Dedicated account manager</span>
+                        </div>
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Instant HWID reset access</span>
+                        </div>
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Beta access to new features</span>
+                        </div>
+                    </div>
+                    <div class="product-pricing">
+                        <div class="product-price">
+                            <span class="price-amount">USD$ 149</span>
+                            <span class="price-period">/one-time payment</span>
+                        </div>
+                        <button class="product-cta btn-purchase" data-package="lifetime">Get Started</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section" id="testimonials">
+        <div class="testimonials-header">
+            <div class="section-badge">Customer Reviews</div>
+            <h2 class="section-title">What Our Users Say</h2>
+            <p class="section-subtitle">
+                Don't just take our word for it. See what our customers have to say about their experience.
+            </p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "The hardware lock feature is brilliant. No more worrying about account security or unauthorized access. 
+                    Setup was instant and it just works flawlessly."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">Sarah Chen</div>
+                        <div class="author-product">Pro Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "Best investment I've made. The admin dashboard gives me complete control, and the support team 
+                    responds within minutes. Highly recommend for anyone serious about security."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">Marcus Rodriguez</div>
+                        <div class="author-product">Elite Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "Simple, fast, and secure. Everything worked out of the box. The hardware authentication 
+                    gives me peace of mind that my account is truly protected."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">Alex Thompson</div>
+                        <div class="author-product">Starter Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "The performance is incredible. Login is instant, the interface is clean, and I never 
+                    have to worry about downtime. Worth every penny."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">Jamie Lee</div>
+                        <div class="author-product">Pro Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "Switched from another provider and couldn't be happier. The hardware lock is foolproof 
+                    and support has been outstanding. This is the real deal."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">David Park</div>
+                        <div class="author-product">Elite Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "Finally a solution that prioritizes security without sacrificing usability. Clean interface, 
+                    powerful features, and rock-solid reliability."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">Emma Wilson</div>
+                        <div class="author-product">Pro Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section" id="about">
+        <div class="about-grid">
+            <div class="about-content">
+                <h2>Built for results, Designed for Simplicity</h2>
+                <p>
+                    We've built CURSED from the ground up with one mission: provide unbeatable performances 
+                    with deep thought techniques and methods.
+                </p>
+                <p>
+                    Since launch, we've been committed to delivering more than premium software that balances 
+                    performance, results and protection. We're constantly improving and adding features based 
+                    on user feedback to give you what YOU need.
+                </p>
+            </div>
+            <div class="about-features">
+                <div class="about-feature">
+                    <div class="about-feature-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                        </svg>
+                    </div>
+                    <div class="about-feature-content">
+                        <h4>Secure Payments</h4>
+                        <p>All transactions protected with industry-leading encryption and secure payment processors using Stripe.</p>
+                    </div>
+                </div>
+                <div class="about-feature">
+                    <div class="about-feature-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-1.48 0-2.85.43-4.01 1.17l1.46 1.46C10.21 6.23 11.08 6 12 6c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3 0 1.13-.64 2.11-1.56 2.62l1.45 1.45C23.16 18.16 24 16.68 24 15c0-2.64-2.05-4.78-4.65-4.96z"/>
+                        </svg>
+                    </div>
+                    <div class="about-feature-content">
+                        <h4>Instant Delivery</h4>
+                        <p>Get instant access to your software. No waiting, no delays, no tickets just immediate and automized activation.</p>
+                    </div>
+                </div>
+                <div class="about-feature">
+                    <div class="about-feature-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </div>
+                    <div class="about-feature-content">
+                        <h4>Hand-Crafted Quality</h4>
+                        <p>Every feature built advanced knowledge of the game with attention to detail using modern development practices.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2 class="cta-title">Ready to Get Started?</h2>
+            <p class="cta-text">
+                Join thousands of users who trust CURSED. 
+                Create your account today and experience premium software with hardware-level protection.
+                Win your wagers with confidence
+            </p>
+            <a href="signup.html" class="btn-primary">CREATE YOUR ACCOUNT</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="footer-logo">CURSED</div>
+                <p class="footer-description">
+                </p>
+            </div>
+            <div class="footer-column">
+                <h4>Product</h4>
+                <div class="footer-links">
+                    <a href="#features">Features</a>
+                    <a href="#products">Pricing</a>
+                    <a href="signup.html">Sign Up</a> 
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4>Company</h4>
+                <div class="footer-links">
+                    <a href="https://discord.gg/">Support</a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4>Legal</h4>
+                <div class="footer-links">
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="footer-text">© 2026 CURSED. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Particle system (same as signup page)
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 100;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = 1.5 + Math.random() * 2;
+                this.alpha = 0.1 + Math.random() * 0.3;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(160, 160, 180, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function drawConnections() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 120) {
+                        const alpha = (1 - dist / 120) * 0.05;
+                        ctx.strokeStyle = `rgba(120, 120, 140, ${alpha})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawConnections();
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Check session and update auth button
+        async function checkSession() {
+            try {
+                const response = await fetch('/api/check-session');
+                const data = await response.json();
+                
+                const authButton = document.getElementById('authButton');
+                if (data.loggedIn) {
+                    // User is logged in - show dashboard button
+                    authButton.textContent = 'Dashboard';
+                    authButton.href = 'dashboard.html';
+                } else {
+                    // User not logged in - show login button  
+                    authButton.textContent = 'Login';
+                    authButton.href = 'login.html';
+                }
+            } catch (error) {
+                console.error('Session check failed:', error);
+            }
+        }
+
+        checkSession();
+
+        // Stripe Integration for Purchase Buttons
+        let stripe;
+
+        // Load Stripe publishable key
+        async function initializeStripe() {
+            try {
+                const response = await fetch('/api/stripe/config');
+                const config = await response.json();
+                stripe = Stripe(config.publishableKey);
+            } catch (error) {
+                console.error('Failed to initialize Stripe:', error);
+            }
+        }
+
+        // Handle purchase button clicks
+        async function handlePurchase(e) {
+            const button = e.currentTarget;
+            const packageType = button.dataset.package;
+
+            // Check if user is logged in
+            const sessionCheck = await fetch('/api/check-session');
+            const sessionData = await sessionCheck.json();
+
+            if (!sessionData.loggedIn) {
+                // Not logged in - redirect to signup
+                window.location.href = 'signup.html';
+                return;
+            }
+
+            // Add loading state
+            const originalText = button.textContent;
+            button.textContent = 'Loading...';
+            button.disabled = true;
+
+            try {
+                // First, fetch the packages to get the correct price ID
+                const packagesResponse = await fetch('/api/packages');
+                const packagesData = await packagesResponse.json();
+                
+                // Find the matching package
+                const selectedPackage = packagesData.packages.find(p => p.id === packageType);
+                if (!selectedPackage) {
+                    throw new Error('Package not found');
+                }
+                
+                const priceId = selectedPackage.priceId;
+
+                const response = await fetch('/api/stripe/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ priceId, packageType })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Redirect to Stripe Checkout
+                    window.location.href = data.url;
+                } else {
+                    alert(data.message || 'Failed to create checkout session');
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }
+            } catch (error) {
+                console.error('Checkout error:', error);
+                alert('Failed to process checkout. Please try again.');
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // Attach event listeners to purchase buttons
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeStripe();
+            
+            document.querySelectorAll('.btn-purchase').forEach(button => {
+                button.addEventListener('click', handlePurchase);
+            });
+        });
+    </script>
+</body>
+</html>

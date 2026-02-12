@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CURSED - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #141414;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+
+        /* Particle canvas */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Corner light sources */
+        .light-source {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .light-top-left {
+            top: -200px;
+            left: -200px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(100, 120, 160, 0.15) 0%, rgba(100, 120, 160, 0.05) 30%, transparent 70%);
+        }
+
+        .light-bottom-right {
+            bottom: -200px;
+            right: -200px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(100, 120, 160, 0.15) 0%, rgba(100, 120, 160, 0.05) 30%, transparent 70%);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(64, 64, 64, 0.3);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 300;
+            letter-spacing: 6px;
+            color: #b4bace;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #999;
+            text-decoration: none;
+            font-size: 14px;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a.active {
+            color: #e5e5e5;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #b4bace;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #e5e5e5;
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .btn-nav {
+            padding: 10px 24px;
+            background: #2e2e2e;
+            border: none;
+            border-radius: 4px;
+            color: #d9d9d9;
+            font-size: 13px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-nav:hover {
+            background: #383838;
+        }
+
+        /* Main Container */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 40px 40px;
+            display: flex;
+            gap: 30px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-card {
+            background: rgba(30, 30, 30, 0.95);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar-header {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #b4bace;
+            margin-bottom: 15px;
+        }
+
+        .user-email {
+            font-size: 13px;
+            color: #999;
+            word-break: break-all;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #999;
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: rgba(180, 186, 206, 0.1);
+            color: #e5e5e5;
+        }
+
+        .sidebar-nav .icon {
+            width: 18px;
+            height: 18px;
+            opacity: 0.7;
+        }
+
+        .balance-section {
+            border-top: 1px solid #404040;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .balance-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .balance-amount {
+            color: #e5e5e5;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            color: #999;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            border-color: #dc3c3c;
+            color: #dc3c3c;
+            background: rgba(220, 60, 60, 0.05);
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(30, 30, 30, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #999;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 300;
+            color: #b4bace;
+            letter-spacing: 1px;
+        }
+
+        /* Order Section */
+        .order-section {
+            background: rgba(30, 30, 30, 0.95);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #b4bace;
+        }
+
+        .order-card {
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .order-title {
+            font-size: 18px;
+            font-weight: 400;
+            color: #e5e5e5;
+            margin-bottom: 8px;
+        }
+
+        .order-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .order-invoice {
+            color: #7a8396;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            color: #999;
+            font-size: 13px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-action:hover {
+            border-color: #b4bace;
+            color: #e5e5e5;
+            background: rgba(180, 186, 206, 0.05);
+        }
+
+        .btn-action.danger {
+            border-color: #dc3c3c;
+            color: #dc3c3c;
+        }
+
+        .btn-action.danger:hover {
+            background: rgba(220, 60, 60, 0.1);
+        }
+
+        /* Balance Card */
+        .balance-card {
+            background: rgba(30, 30, 30, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .balance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .balance-title {
+            font-size: 13px;
+            color: #999;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .balance-value {
+            font-size: 32px;
+            font-weight: 300;
+            color: #b4bace;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .btn-topup {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%);
+            border: none;
+            border-radius: 4px;
+            color: #1a1a1a;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .btn-topup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(180, 186, 206, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Corner lights -->
+    <div class="light-source light-top-left"></div>
+    <div class="light-source light-bottom-right"></div>
+
+    <!-- Particle canvas -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">CURSED</div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="#products">Products</a>
+                <a href="#feedback">Feedback</a>
+                <a href="#status">Status</a>
+                <a href="dashboard.html" class="active">Dashboard</a>
+            </div>
+            <div class="nav-right">
+                <span id="usernameDisplay" style="color: #999; font-size: 14px; margin-right: 10px;">Loading...</span>
+                <a href="#" class="btn-nav" id="logoutBtn">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h2 class="sidebar-title">Customer Dashboard</h2>
+                    <p class="user-email">Logged in as<br><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1e6b6d7b6c5e7b667f736e727b307d7173">[email&#160;protected]</a></p>
+                </div>
+
+                <ul class="sidebar-nav">
+                    <li>
+                        <a href="#" class="active">
+                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                            </svg>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+                            </svg>
+                            Orders
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 9h-2V5h2v6zm0 4h-2v-2h2v2z"/>
+                            </svg>
+                            Tickets
+                        </a>
+                    </li>
+                    <li>
+
+                                                <a href="#">
+                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                            DELETE ACCOUNT
+                        </a>
+                    </li>
+                    <li>
+                        
+                            </svg>
+                    </li>
+                </ul>
+
+                <!-- Subscription Status -->
+                <div id="subscriptionSection" style="margin: 20px 0; padding: 20px; background: rgba(40, 40, 40, 0.5); border-radius: 8px; border-left: 4px solid #666;">
+                    <div style="font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Subscription</div>
+                    <div id="subscriptionStatus" style="color: #e5e5e5; font-size: 16px; margin-bottom: 8px;">Loading...</div>
+                    <div id="subscriptionPackage" style="color: #999; font-size: 13px; margin-bottom: 15px;"></div>
+                    <button id="manageSubscriptionBtn" style="display: none; width: 100%; padding: 8px; background: #dc3c3c; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 12px; transition: background 0.3s ease;">
+                        Cancel Subscription
+                    </button>
+                    <a href="index.html#products" id="upgradeBtn" style="display: none; width: 100%; padding: 8px; background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%); border: none; border-radius: 4px; color: #1a1a1a; cursor: pointer; font-size: 12px; text-align: center; text-decoration: none; display: inline-block; font-weight: 600;">
+                        Subscribe Now
+                    </a>
+                </div>
+
+                <button class="logout-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Completed Orders</div>
+                    <div class="stat-value">1</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Spent</div>
+                    <div class="stat-value">€12.01</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Customer Since</div>
+                    <div class="stat-value">Nov 11, 2025</div>
+                </div>
+            </div>
+
+            <!-- Latest Order -->
+            <div class="order-section">
+                <div class="section-header">
+                    <h3 class="section-title">Latest Order</h3>
+                </div>
+                <div class="order-card">
+                    <h4 class="order-title">FiveM Bypass Monthly</h4>
+                    <div class="order-meta">
+                        Invoice <span class="order-invoice">#add44c09954ff-00D000078S4708</span> - Nov 11, 2025
+                    </div>
+                </div>
+            </div>
+
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Particle system
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 80;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = 1.5 + Math.random() * 2;
+                this.alpha = 0.1 + Math.random() * 0.3;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(160, 160, 180, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Initialize particles
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        // Draw connections
+        function drawConnections() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 120) {
+                        const alpha = (1 - dist / 120) * 0.05;
+                        ctx.strokeStyle = `rgba(120, 120, 140, ${alpha})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawConnections();
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Load user data from session
+        async function loadUserData() {
+            try {
+                const response = await fetch('/api/check-session');
+                const data = await response.json();
+                
+                if (!data.loggedIn) {
+                    // Not logged in, redirect to login
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Update UI with user info
+                const usernameDisplay = document.getElementById('usernameDisplay');
+                if (usernameDisplay) {
+                    usernameDisplay.textContent = data.user.username;
+                }
+                
+                const userEmail = document.querySelector('.user-email');
+                if (userEmail) {
+                    userEmail.innerHTML = `Logged in as<br>${data.user.username}`;
+                }
+            } catch (error) {
+                console.error('Session check failed:', error);
+                window.location.href = 'login.html';
+            }
+        }
+
+        loadUserData();
+
+        // Load subscription status
+        async function loadSubscription() {
+            try {
+                const response = await fetch('/api/subscription');
+                const data = await response.json();
+                
+                const statusEl = document.getElementById('subscriptionStatus');
+                const packageEl = document.getElementById('subscriptionPackage');
+                const manageBtnEl = document.getElementById('manageSubscriptionBtn');
+                const upgradeBtnEl = document.getElementById('upgradeBtn');
+                
+                if (data.success && data.subscription) {
+                    const sub = data.subscription;
+                    
+                    // Handle lifetime vs monthly differently
+                    if (sub.package === 'lifetime') {
+                        statusEl.textContent = 'Lifetime Access';
+                        statusEl.style.color = '#3cdc64';
+                        packageEl.textContent = 'LIFETIME Package - Permanent Access';
+                        manageBtnEl.style.display = 'none'; // Can't cancel lifetime
+                        upgradeBtnEl.style.display = 'none';
+                    } else {
+                        statusEl.textContent = sub.status === 'active' ? 'Active Subscription' : 'Subscription Cancelled';
+                        statusEl.style.color = sub.status === 'active' ? '#3cdc64' : '#dc3c3c';
+                        packageEl.textContent = sub.package.toUpperCase() + ' Package';
+                        
+                        if (sub.status === 'active') {
+                            manageBtnEl.style.display = 'block';
+                            upgradeBtnEl.style.display = 'none';
+                        } else {
+                            manageBtnEl.style.display = 'none';
+                            upgradeBtnEl.style.display = 'inline-block';
+                        }
+                    }
+                } else {
+                    statusEl.textContent = 'No Active Subscription';
+                    statusEl.style.color = '#999';
+                    packageEl.textContent = 'Get started with a subscription';
+                    manageBtnEl.style.display = 'none';
+                    upgradeBtnEl.style.display = 'inline-block';
+                }
+            } catch (error) {
+                console.error('Failed to load subscription:', error);
+            }
+        }
+
+        loadSubscription();
+
+        // Handle subscription cancellation
+        const manageSubBtn = document.getElementById('manageSubscriptionBtn');
+        if (manageSubBtn) {
+            manageSubBtn.addEventListener('click', async () => {
+                if (!confirm('Are you sure you want to cancel your subscription?\n\nYou will continue to have access until the end of your billing period.')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/stripe/cancel-subscription', {
+                        method: 'POST'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        alert('Subscription cancelled successfully');
+                        loadSubscription(); // Reload subscription status
+                    } else {
+                        alert('Failed to cancel subscription: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Cancel error:', error);
+                    alert('Failed to cancel subscription');
+                }
+            });
+        }
+
+        // Check for payment success/cancel in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === 'true') {
+            setTimeout(() => {
+                alert('Payment successful! Your subscription is now active.');
+                // Remove query params from URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                loadSubscription();
+            }, 500);
+        } else if (urlParams.get('cancelled') === 'true') {
+            setTimeout(() => {
+                alert('Payment cancelled. You can try again anytime from the pricing page.');
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }, 500);
+        }
+
+        // Logout functionality for both nav button and sidebar button
+        async function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    const response = await fetch('/api/logout', {
+                        method: 'POST'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        window.location.href = 'index.html';
+                    } else {
+                        alert('Logout failed. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    alert('Logout failed. Please try again.');
+                }
+            }
+        }
+
+        // Attach logout handler to nav button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleLogout();
+            });
+        }
+
+        // Attach logout handler to sidebar button
+        const sidebarLogoutBtn = document.querySelector('.logout-btn');
+        if (sidebarLogoutBtn) {
+            sidebarLogoutBtn.addEventListener('click', () => {
+                handleLogout();
+            });
+        }
+    </script>
+</body>
+</html>
