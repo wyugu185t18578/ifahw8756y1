@@ -28,7 +28,8 @@ app.use(session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'lax' // Helps with cookie issues
     }
 }));
 
@@ -146,9 +147,20 @@ app.post('/api/web-login', async (req, res) => {
         req.session.userId = user.id;
         req.session.username = user.username;
 
-        return res.json({
-            success: true,
-            message: 'Login successful'
+        // Force save session before responding
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Login failed - session error'
+                });
+            }
+
+            return res.json({
+                success: true,
+                message: 'Login successful'
+            });
         });
 
     } catch (error) {
@@ -201,9 +213,20 @@ app.post('/api/signup', async (req, res) => {
         req.session.userId = newUser.id;
         req.session.username = newUser.username;
 
-        return res.json({
-            success: true,
-            message: 'Account created successfully'
+        // Force save session before responding
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Signup successful but login failed'
+                });
+            }
+
+            return res.json({
+                success: true,
+                message: 'Account created successfully'
+            });
         });
 
     } catch (error) {
