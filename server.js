@@ -18,7 +18,171 @@ admin.initializeApp({
 const db = admin.firestore();
 const usersCollection = db.collection('users');
 
-// Middleware
+// ==================== STRIPE WEBHOOK (MUST BE BEFORE bodyParser) ====================
+// This MUST be defined before app.use(bodyParser.json()) because Stripe needs raw body for signature verification
+app.post('/api/stripe/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    console.log('🔔 Webhook received!');
+
+    try {
+        event = stripe.webhooks.constructEvent(
+            req.body,
+            sig,
+            process.env.STRIPE_WEBHOOK_SECRET
+        );
+        console.log('✅ Webhook signature verified');
+    } catch (err) {
+        console.error('❌ Webhook signature verification failed:', err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    try {
+        console.log(`📩 Event type: ${event.type}`);
+        
+        switch (event.type) {
+            case 'checkout.session.completed':
+                await handleCheckoutSessionCompleted(event.data.object);
+                break;
+            
+            case 'customer.subscription.updated':
+                await handleSubscriptionUpdated(event.data.object);
+                break;
+            
+            case 'customer.subscription.deleted':
+                await handleSubscriptionDeleted(event.data.object);
+                break;
+            
+            case 'invoice.payment_succeeded':
+                await handlePaymentSucceeded(event.data.object);
+                break;
+            
+            case 'invoice.payment_failed':
+                await handlePaymentFailed(event.data.object);
+                break;
+
+            default:
+                console.log(`ℹ️ Unhandled event type ${event.type}`);
+        }
+
+        res.json({ received: true });
+    } catch (error) {
+        console.error('❌ Webhook handler error:', error);
+        res.status(500).json({ error: 'Webhook handler failed' });
+    }
+});
+
+// Webhook handler functions
+async function handleCheckoutSessionCompleted(session) {
+    const userId = session.metadata.userId;
+    const packageType = session.metadata.packageType;
+    
+    console.log(`🎉 Processing checkout for user ${userId}, package: ${packageType}`);
+    console.log(`💳 Customer ID: ${session.customer}`);
+    
+    try {
+        const updates = {
+            'subscription.status': 'active',
+            'subscription.package': packageType,
+            'subscription.stripeCustomerId': session.customer,
+            'subscription.activatedAt': admin.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (packageType === 'lifetime') {
+            // Lifetime purchase - no end date
+            updates['subscription.currentPeriodEnd'] = null;
+            console.log('📦 Type: Lifetime purchase');
+        } else {
+            // Monthly subscription
+            updates['subscription.stripeSubscriptionId'] = session.subscription;
+            
+            // Fetch subscription details to get current_period_end
+            if (session.subscription) {
+                const subscription = await stripe.subscriptions.retrieve(session.subscription);
+                updates['subscription.currentPeriodEnd'] = new Date(subscription.current_period_end * 1000).toISOString();
+            }
+            console.log('📦 Type: Monthly subscription');
+        }
+
+        await usersCollection.doc(userId).update(updates);
+        console.log(`✅ LICENSE ACTIVATED for user ${userId}`);
+        console.log('📝 Updates applied:', JSON.stringify(updates, null, 2));
+    } catch (error) {
+        console.error(`❌ Failed to activate license for user ${userId}:`, error);
+        throw error; // Re-throw so webhook returns error to Stripe
+    }
+}
+
+async function handleSubscriptionUpdated(subscription) {
+    const customerId = subscription.customer;
+    
+    // Find user by customer ID
+    const snapshot = await usersCollection
+        .where('subscription.stripeCustomerId', '==', customerId)
+        .limit(1)
+        .get();
+    
+    if (snapshot.empty) {
+        console.error('User not found for customer:', customerId);
+        return;
+    }
+
+    const userId = snapshot.docs[0].id;
+    
+    const updates = {
+        'subscription.status': subscription.status,
+        'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000).toISOString()
+    };
+
+    await usersCollection.doc(userId).update(updates);
+    console.log(`Subscription updated for user ${userId}`);
+}
+
+async function handleSubscriptionDeleted(subscription) {
+    const customerId = subscription.customer;
+    
+    const snapshot = await usersCollection
+        .where('subscription.stripeCustomerId', '==', customerId)
+        .limit(1)
+        .get();
+    
+    if (snapshot.empty) {
+        console.error('User not found for customer:', customerId);
+        return;
+    }
+
+    const userId = snapshot.docs[0].id;
+    
+    await usersCollection.doc(userId).update({
+        'subscription.status': 'cancelled',
+        'subscription.cancelledAt': new Date().toISOString()
+    });
+    
+    console.log(`Subscription cancelled for user ${userId}`);
+}
+
+async function handlePaymentSucceeded(invoice) {
+    console.log(`Payment succeeded for invoice ${invoice.id}`);
+}
+
+async function handlePaymentFailed(invoice) {
+    console.log(`Payment failed for invoice ${invoice.id}`);
+    
+    const customerId = invoice.customer;
+    const snapshot = await usersCollection
+        .where('subscription.stripeCustomerId', '==', customerId)
+        .limit(1)
+        .get();
+    
+    if (!snapshot.empty) {
+        const userId = snapshot.docs[0].id;
+        console.log(`Payment failed for user ${userId}`);
+    }
+}
+
+// Middleware (MUST COME AFTER WEBHOOK)
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
@@ -577,159 +741,6 @@ app.post('/api/stripe/create-checkout-session', requireAuth, async (req, res) =>
     }
 });
 
-// Stripe Webhook Handler
-app.post('/api/stripe/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
-    const sig = req.headers['stripe-signature'];
-    let event;
-
-    try {
-        event = stripe.webhooks.constructEvent(
-            req.body,
-            sig,
-            process.env.STRIPE_WEBHOOK_SECRET
-        );
-    } catch (err) {
-        console.error('Webhook signature verification failed:', err.message);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-
-    // Handle the event
-    try {
-        switch (event.type) {
-            case 'checkout.session.completed':
-                await handleCheckoutSessionCompleted(event.data.object);
-                break;
-            
-            case 'customer.subscription.updated':
-                await handleSubscriptionUpdated(event.data.object);
-                break;
-            
-            case 'customer.subscription.deleted':
-                await handleSubscriptionDeleted(event.data.object);
-                break;
-            
-            case 'invoice.payment_succeeded':
-                await handlePaymentSucceeded(event.data.object);
-                break;
-            
-            case 'invoice.payment_failed':
-                await handlePaymentFailed(event.data.object);
-                break;
-
-            default:
-                console.log(`Unhandled event type ${event.type}`);
-        }
-
-        res.json({ received: true });
-    } catch (error) {
-        console.error('Webhook handler error:', error);
-        res.status(500).json({ error: 'Webhook handler failed' });
-    }
-});
-
-// Webhook handler functions
-async function handleCheckoutSessionCompleted(session) {
-    const userId = session.metadata.userId;
-    const packageType = session.metadata.packageType;
-    
-    console.log(`🎉 Checkout completed for user ${userId}, package: ${packageType}`);
-    console.log(`Customer ID: ${session.customer}`);
-    
-    const updates = {
-        'subscription.status': 'active',
-        'subscription.package': packageType,
-        'subscription.stripeCustomerId': session.customer, // THIS WAS MISSING!
-        'subscription.activatedAt': new Date().toISOString()
-    };
-
-    if (packageType === 'lifetime') {
-        // Lifetime purchase - no subscription ID
-        updates['subscription.currentPeriodEnd'] = null;
-        console.log(`✅ Lifetime license activated`);
-    } else {
-        // Monthly subscription
-        updates['subscription.stripeSubscriptionId'] = session.subscription;
-        
-        // Fetch subscription details to get current_period_end
-        if (session.subscription) {
-            const subscription = await stripe.subscriptions.retrieve(session.subscription);
-            updates['subscription.currentPeriodEnd'] = new Date(subscription.current_period_end * 1000).toISOString();
-        }
-        console.log(`✅ Monthly subscription activated`);
-    }
-
-    await updateUser(userId, updates);
-    console.log(`✅ License activated for user ${userId}:`, updates);
-}
-
-async function handleSubscriptionUpdated(subscription) {
-    const customerId = subscription.customer;
-    
-    // Find user by customer ID
-    const snapshot = await usersCollection
-        .where('subscription.stripeCustomerId', '==', customerId)
-        .limit(1)
-        .get();
-    
-    if (snapshot.empty) {
-        console.error('User not found for customer:', customerId);
-        return;
-    }
-
-    const userId = snapshot.docs[0].id;
-    
-    const updates = {
-        'subscription.status': subscription.status,
-        'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000).toISOString()
-    };
-
-    await updateUser(userId, updates);
-    console.log(`Subscription updated for user ${userId}`);
-}
-
-async function handleSubscriptionDeleted(subscription) {
-    const customerId = subscription.customer;
-    
-    const snapshot = await usersCollection
-        .where('subscription.stripeCustomerId', '==', customerId)
-        .limit(1)
-        .get();
-    
-    if (snapshot.empty) {
-        console.error('User not found for customer:', customerId);
-        return;
-    }
-
-    const userId = snapshot.docs[0].id;
-    
-    await updateUser(userId, {
-        'subscription.status': 'cancelled',
-        'subscription.cancelledAt': new Date().toISOString()
-    });
-    
-    console.log(`Subscription cancelled for user ${userId}`);
-}
-
-async function handlePaymentSucceeded(invoice) {
-    console.log(`Payment succeeded for invoice ${invoice.id}`);
-    // Additional logic if needed for successful payments
-}
-
-async function handlePaymentFailed(invoice) {
-    console.log(`Payment failed for invoice ${invoice.id}`);
-    
-    const customerId = invoice.customer;
-    const snapshot = await usersCollection
-        .where('subscription.stripeCustomerId', '==', customerId)
-        .limit(1)
-        .get();
-    
-    if (!snapshot.empty) {
-        const userId = snapshot.docs[0].id;
-        // You might want to notify the user or take action here
-        console.log(`Payment failed for user ${userId}`);
-    }
-}
 
 // Get Subscription Status (for dashboard)
 app.get('/api/subscription', requireAuth, async (req, res) => {
