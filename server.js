@@ -1,14 +1,15 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require('path');
 const admin = require('firebase-admin');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Initialize Firebase Admin SDK
-// You'll need to set this environment variable with your Firebase config
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
 
 admin.initializeApp({
@@ -18,8 +19,86 @@ admin.initializeApp({
 const db = admin.firestore();
 const usersCollection = db.collection('users');
 
+// Stripe webhook endpoint (MUST be before express.json())
+app.post('/api/stripe/webhook', express.raw({type: 'application/json'}), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    } catch (err) {
+        console.log(`⚠️  Webhook signature verification failed.`, err.message);
+        return res.sendStatus(400);
+    }
+
+    // Handle the event
+    switch (event.type) {
+        case 'checkout.session.completed':
+            const session = event.data.object;
+            console.log('Payment successful!', session);
+            
+            // Update user subscription status
+            const userId = session.metadata.userId;
+            const packageType = session.metadata.packageType;
+            
+            try {
+                const userDoc = await usersCollection.doc(userId).get();
+                
+                if (userDoc.exists) {
+                    await usersCollection.doc(userId).update({
+                        subscription: {
+                            package: packageType,
+                            status: 'active',
+                            customerId: session.customer,
+                            subscriptionId: session.subscription || null,
+                            paymentIntentId: session.payment_intent || null,
+                            mode: session.mode,
+                            createdAt: new Date().toISOString()
+                        }
+                    });
+                    console.log(`✅ User ${userId} purchased ${packageType} package`);
+                }
+            } catch (error) {
+                console.error('Error updating user subscription:', error);
+            }
+            break;
+            
+        case 'customer.subscription.deleted':
+            const subscription = event.data.object;
+            console.log('Subscription cancelled!', subscription);
+            
+            try {
+                const snapshot = await usersCollection
+                    .where('subscription.subscriptionId', '==', subscription.id)
+                    .limit(1)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    const doc = snapshot.docs[0];
+                    const userData = doc.data();
+                    await usersCollection.doc(doc.id).update({
+                        subscription: {
+                            ...userData.subscription,
+                            status: 'cancelled',
+                            cancelledAt: new Date().toISOString()
+                        }
+                    });
+                    console.log(`❌ Subscription cancelled for user ${doc.id}`);
+                }
+            } catch (error) {
+                console.error('Error cancelling subscription:', error);
+            }
+            break;
+            
+        default:
+            console.log(`Unhandled event type ${event.type}`);
+    }
+
+    res.json({received: true});
+});
+
 // Middleware
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'cursed-secret-key-change-in-production',
@@ -29,7 +108,7 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: 'lax' // Helps with cookie issues
+        sameSite: 'lax'
     }
 }));
 
@@ -45,13 +124,20 @@ async function getUserByUsername(username) {
     return { id: doc.id, ...doc.data() };
 }
 
+async function getUserById(userId) {
+    const doc = await usersCollection.doc(userId).get();
+    if (!doc.exists) return null;
+    return { id: doc.id, ...doc.data() };
+}
+
 async function createUser(username, password) {
     const newUser = {
         username,
         password, // In production, hash this with bcrypt!
         createdAt: new Date().toISOString(),
         hwid: null,
-        hwidLockedAt: null
+        hwidLockedAt: null,
+        subscription: null
     };
     
     const docRef = await usersCollection.add(newUser);
@@ -354,16 +440,14 @@ app.get('/api/subscription', async (req, res) => {
     }
     
     try {
-        const snapshot = await usersCollection.doc(req.session.userId).get();
+        const user = await getUserById(req.session.userId);
         
-        if (!snapshot.exists) {
+        if (!user) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
         }
-        
-        const user = snapshot.data();
         
         res.json({
             success: true,
@@ -374,6 +458,155 @@ app.get('/api/subscription', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Server error'
+        });
+    }
+});
+
+// Get Stripe publishable key
+app.get('/api/stripe/config', (req, res) => {
+    res.json({
+        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
+    });
+});
+
+// Get package pricing info
+app.get('/api/packages', (req, res) => {
+    res.json({
+        packages: [
+            {
+                id: 'monthly',
+                name: 'Monthly Subscription',
+                price: 20.00,
+                priceId: process.env.STRIPE_PRICE_MONTHLY,
+                billing: 'monthly',
+                features: [
+                    'Hardware-locked authentication',
+                    'Single device license',
+                    'Email support',
+                    'Regular updates'
+                ]
+            },
+            {
+                id: 'lifetime',
+                name: 'Lifetime Subscription',
+                price: 149.00,
+                priceId: process.env.STRIPE_PRICE_LIFETIME,
+                billing: 'one-time',
+                features: [
+                    'Everything in Monthly',
+                    'Dedicated account manager',
+                    'Instant HWID reset access',
+                    'Beta access to new features',
+                    'Lifetime updates'
+                ]
+            }
+        ]
+    });
+});
+
+// Create Stripe checkout session
+app.post('/api/stripe/create-checkout-session', async (req, res) => {
+    const { priceId, packageType } = req.body;
+    
+    if (!req.session.userId) {
+        return res.json({
+            success: false,
+            message: 'You must be logged in to purchase'
+        });
+    }
+    
+    try {
+        const user = await getUserById(req.session.userId);
+        
+        if (!user) {
+            return res.json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        
+        // Determine if this is a subscription or one-time payment
+        const mode = packageType === 'lifetime' ? 'payment' : 'subscription';
+        
+        const sessionConfig = {
+            mode: mode,
+            line_items: [
+                {
+                    price: priceId,
+                    quantity: 1,
+                },
+            ],
+            success_url: `${req.headers.origin}/dashboard.html?success=true`,
+            cancel_url: `${req.headers.origin}/?cancelled=true`,
+            customer_email: user.username + '@cursed.local',
+            metadata: {
+                userId: user.id,
+                username: user.username,
+                packageType: packageType
+            }
+        };
+        
+        const session = await stripe.checkout.sessions.create(sessionConfig);
+        
+        res.json({
+            success: true,
+            sessionId: session.id,
+            url: session.url
+        });
+    } catch (error) {
+        console.error('Stripe error:', error);
+        res.json({
+            success: false,
+            message: 'Failed to create checkout session'
+        });
+    }
+});
+
+// Cancel subscription
+app.post('/api/stripe/cancel-subscription', async (req, res) => {
+    if (!req.session.userId) {
+        return res.json({
+            success: false,
+            message: 'Not logged in'
+        });
+    }
+    
+    try {
+        const user = await getUserById(req.session.userId);
+        
+        if (!user || !user.subscription) {
+            return res.json({
+                success: false,
+                message: 'No active subscription found'
+            });
+        }
+        
+        // Can't cancel one-time payments (lifetime)
+        if (user.subscription.mode === 'payment' || user.subscription.package === 'lifetime') {
+            return res.json({
+                success: false,
+                message: 'Lifetime subscriptions cannot be cancelled. This is a one-time payment.'
+            });
+        }
+        
+        if (!user.subscription.subscriptionId) {
+            return res.json({
+                success: false,
+                message: 'No subscription ID found'
+            });
+        }
+        
+        await stripe.subscriptions.cancel(user.subscription.subscriptionId);
+        
+        res.json({
+            success: true,
+            message: 'Subscription cancelled successfully'
+        });
+    } catch (error) {
+        console.error('Stripe cancel error:', error);
+        res.json({
+            success: false,
+            message: 'Failed to cancel subscription'
         });
     }
 });
