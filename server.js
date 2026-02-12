@@ -9,28 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Initialize Firebase Admin SDK
-let serviceAccount;
-
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    // Try to use environment variable first
-    try {
-        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    } catch (e) {
-        console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT from environment variable');
-        console.error('Please check your .env file or use a firebase-adminsdk.json file instead');
-        process.exit(1);
-    }
-} else {
-    // Fall back to file
-    try {
-        serviceAccount = require('./firebase-adminsdk.json');
-        console.log('Using firebase-adminsdk.json file for credentials');
-    } catch (e) {
-        console.error('No Firebase credentials found!');
-        console.error('Either set FIREBASE_SERVICE_ACCOUNT in .env or create firebase-adminsdk.json');
-        process.exit(1);
-    }
-}
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
@@ -39,75 +18,7 @@ admin.initializeApp({
 const db = admin.firestore();
 const usersCollection = db.collection('users');
 
-// IMPORTANT: Stripe webhook endpoint MUST come BEFORE body-parser middleware
-// because it needs the raw body for signature verification
-app.post('/api/stripe/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
-    const sig = req.headers['stripe-signature'];
-    let event;
-
-    console.log('=== WEBHOOK RECEIVED ===');
-    console.log('Timestamp:', new Date().toISOString());
-    console.log('Signature present:', !!sig);
-
-    try {
-        event = stripe.webhooks.constructEvent(
-            req.body,
-            sig,
-            process.env.STRIPE_WEBHOOK_SECRET
-        );
-        console.log('✅ Signature verified');
-        console.log('Event type:', event.type);
-        console.log('Event ID:', event.id);
-    } catch (err) {
-        console.error('❌ Webhook signature verification failed:', err.message);
-        console.error('Make sure STRIPE_WEBHOOK_SECRET in .env matches Stripe Dashboard');
-        return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-
-    // Handle the event
-    try {
-        console.log('Processing event:', event.type);
-        
-        switch (event.type) {
-            case 'checkout.session.completed':
-                console.log('Handling checkout.session.completed');
-                await handleCheckoutSessionCompleted(event.data.object);
-                break;
-            
-            case 'customer.subscription.updated':
-                console.log('Handling customer.subscription.updated');
-                await handleSubscriptionUpdated(event.data.object);
-                break;
-            
-            case 'customer.subscription.deleted':
-                console.log('Handling customer.subscription.deleted');
-                await handleSubscriptionDeleted(event.data.object);
-                break;
-            
-            case 'invoice.payment_succeeded':
-                console.log('Handling invoice.payment_succeeded');
-                await handlePaymentSucceeded(event.data.object);
-                break;
-            
-            case 'invoice.payment_failed':
-                console.log('Handling invoice.payment_failed');
-                await handlePaymentFailed(event.data.object);
-                break;
-
-            default:
-                console.log(`Unhandled event type ${event.type}`);
-        }
-
-        console.log('✅ Event processed successfully');
-        res.json({ received: true });
-    } catch (error) {
-        console.error('❌ Webhook handler error:', error);
-        console.error('Stack:', error.stack);
-        res.status(500).json({ error: 'Webhook handler failed' });
-    }
-});
-
-// Middleware - comes AFTER webhook endpoint
+// Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
@@ -666,55 +577,89 @@ app.post('/api/stripe/create-checkout-session', requireAuth, async (req, res) =>
     }
 });
 
+// Stripe Webhook Handler
+app.post('/api/stripe/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(
+            req.body,
+            sig,
+            process.env.STRIPE_WEBHOOK_SECRET
+        );
+    } catch (err) {
+        console.error('Webhook signature verification failed:', err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    try {
+        switch (event.type) {
+            case 'checkout.session.completed':
+                await handleCheckoutSessionCompleted(event.data.object);
+                break;
+            
+            case 'customer.subscription.updated':
+                await handleSubscriptionUpdated(event.data.object);
+                break;
+            
+            case 'customer.subscription.deleted':
+                await handleSubscriptionDeleted(event.data.object);
+                break;
+            
+            case 'invoice.payment_succeeded':
+                await handlePaymentSucceeded(event.data.object);
+                break;
+            
+            case 'invoice.payment_failed':
+                await handlePaymentFailed(event.data.object);
+                break;
+
+            default:
+                console.log(`Unhandled event type ${event.type}`);
+        }
+
+        res.json({ received: true });
+    } catch (error) {
+        console.error('Webhook handler error:', error);
+        res.status(500).json({ error: 'Webhook handler failed' });
+    }
+});
+
 // Webhook handler functions
 async function handleCheckoutSessionCompleted(session) {
-    console.log('=== CHECKOUT SESSION COMPLETED ===');
-    console.log('Session ID:', session.id);
-    console.log('Metadata:', session.metadata);
-    
     const userId = session.metadata.userId;
     const packageType = session.metadata.packageType;
     
-    if (!userId) {
-        console.error('❌ No userId in metadata!');
-        return;
-    }
-
-    console.log(`Processing for user ${userId}, package: ${packageType}`);
+    console.log(`🎉 Checkout completed for user ${userId}, package: ${packageType}`);
+    console.log(`Customer ID: ${session.customer}`);
     
     const updates = {
         'subscription.status': 'active',
         'subscription.package': packageType,
-        'subscription.activatedAt': new Date().toISOString(),
-        'subscription.stripeCustomerId': session.customer
+        'subscription.stripeCustomerId': session.customer, // THIS WAS MISSING!
+        'subscription.activatedAt': new Date().toISOString()
     };
 
     if (packageType === 'lifetime') {
+        // Lifetime purchase - no subscription ID
         updates['subscription.currentPeriodEnd'] = null;
-        console.log('Lifetime license - no expiration');
+        console.log(`✅ Lifetime license activated`);
     } else {
+        // Monthly subscription
         updates['subscription.stripeSubscriptionId'] = session.subscription;
         
+        // Fetch subscription details to get current_period_end
         if (session.subscription) {
-            try {
-                const subscription = await stripe.subscriptions.retrieve(session.subscription);
-                updates['subscription.currentPeriodEnd'] = new Date(subscription.current_period_end * 1000).toISOString();
-                console.log('Monthly subscription - expires:', updates['subscription.currentPeriodEnd']);
-            } catch (err) {
-                console.error('Failed to retrieve subscription details:', err);
-            }
+            const subscription = await stripe.subscriptions.retrieve(session.subscription);
+            updates['subscription.currentPeriodEnd'] = new Date(subscription.current_period_end * 1000).toISOString();
         }
+        console.log(`✅ Monthly subscription activated`);
     }
 
-    console.log('Updates to apply:', updates);
-
-    try {
-        await updateUser(userId, updates);
-        console.log(`✅ License activated for user ${userId}`);
-    } catch (error) {
-        console.error('❌ Failed to update user:', error);
-        throw error;
-    }
+    await updateUser(userId, updates);
+    console.log(`✅ License activated for user ${userId}:`, updates);
 }
 
 async function handleSubscriptionUpdated(subscription) {
