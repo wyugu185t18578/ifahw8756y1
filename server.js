@@ -243,7 +243,10 @@ app.get('/api/check-session', (req, res) => {
     if (req.session.userId) {
         return res.json({
             loggedIn: true,
-            username: req.session.username
+            user: {
+                id: req.session.userId,
+                username: req.session.username
+            }
         });
     }
     return res.json({ loggedIn: false });
@@ -334,6 +337,40 @@ app.post('/api/reset-hwid', async (req, res) => {
 
     } catch (error) {
         console.error('Reset HWID error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
+// Get user's subscription status
+app.get('/api/subscription', async (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({
+            success: false,
+            message: 'Not logged in'
+        });
+    }
+    
+    try {
+        const snapshot = await usersCollection.doc(req.session.userId).get();
+        
+        if (!snapshot.exists) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        
+        const user = snapshot.data();
+        
+        res.json({
+            success: true,
+            subscription: user.subscription || null
+        });
+    } catch (error) {
+        console.error('Get subscription error:', error);
         res.status(500).json({
             success: false,
             message: 'Server error'
