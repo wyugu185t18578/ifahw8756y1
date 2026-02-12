@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
@@ -19,86 +18,8 @@ admin.initializeApp({
 const db = admin.firestore();
 const usersCollection = db.collection('users');
 
-// Stripe webhook endpoint (MUST be before express.json())
-app.post('/api/stripe/webhook', express.raw({type: 'application/json'}), async (req, res) => {
-    const sig = req.headers['stripe-signature'];
-    let event;
-
-    try {
-        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    } catch (err) {
-        console.log(`⚠️  Webhook signature verification failed.`, err.message);
-        return res.sendStatus(400);
-    }
-
-    // Handle the event
-    switch (event.type) {
-        case 'checkout.session.completed':
-            const session = event.data.object;
-            console.log('Payment successful!', session);
-            
-            // Update user subscription status
-            const userId = session.metadata.userId;
-            const packageType = session.metadata.packageType;
-            
-            try {
-                const userDoc = await usersCollection.doc(userId).get();
-                
-                if (userDoc.exists) {
-                    await usersCollection.doc(userId).update({
-                        subscription: {
-                            package: packageType,
-                            status: 'active',
-                            customerId: session.customer,
-                            subscriptionId: session.subscription || null,
-                            paymentIntentId: session.payment_intent || null,
-                            mode: session.mode,
-                            createdAt: new Date().toISOString()
-                        }
-                    });
-                    console.log(`✅ User ${userId} purchased ${packageType} package`);
-                }
-            } catch (error) {
-                console.error('Error updating user subscription:', error);
-            }
-            break;
-            
-        case 'customer.subscription.deleted':
-            const subscription = event.data.object;
-            console.log('Subscription cancelled!', subscription);
-            
-            try {
-                const snapshot = await usersCollection
-                    .where('subscription.subscriptionId', '==', subscription.id)
-                    .limit(1)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    const doc = snapshot.docs[0];
-                    const userData = doc.data();
-                    await usersCollection.doc(doc.id).update({
-                        subscription: {
-                            ...userData.subscription,
-                            status: 'cancelled',
-                            cancelledAt: new Date().toISOString()
-                        }
-                    });
-                    console.log(`❌ Subscription cancelled for user ${doc.id}`);
-                }
-            } catch (error) {
-                console.error('Error cancelling subscription:', error);
-            }
-            break;
-            
-        default:
-            console.log(`Unhandled event type ${event.type}`);
-    }
-
-    res.json({received: true});
-});
-
 // Middleware
-app.use(express.json());
+app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'cursed-secret-key-change-in-production',
@@ -131,13 +52,30 @@ async function getUserById(userId) {
 }
 
 async function createUser(username, password) {
+    const now = new Date().toISOString();
     const newUser = {
         username,
         password, // In production, hash this with bcrypt!
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        lastLogin: now,
         hwid: null,
         hwidLockedAt: null,
-        subscription: null
+        // Subscription/License tracking
+        subscription: {
+            status: 'inactive', // inactive, active, cancelled
+            package: null, // monthly, lifetime
+            stripeCustomerId: null,
+            stripeSubscriptionId: null,
+            currentPeriodEnd: null,
+            activatedAt: null,
+            cancelledAt: null
+        },
+        // User statistics
+        stats: {
+            totalLogins: 1,
+            lastLoginDate: now,
+            accountAge: 0 // will be calculated dynamically
+        }
     };
     
     const docRef = await usersCollection.add(newUser);
@@ -146,6 +84,17 @@ async function createUser(username, password) {
 
 async function updateUser(userId, updates) {
     await usersCollection.doc(userId).update(updates);
+}
+
+// Middleware to check if user is authenticated
+function requireAuth(req, res, next) {
+    if (!req.session.userId) {
+        return res.status(401).json({
+            success: false,
+            message: 'Unauthorized'
+        });
+    }
+    next();
 }
 
 // API Routes
@@ -178,6 +127,14 @@ app.post('/api/login', async (req, res) => {
             });
         }
 
+        // Check if user has an active subscription/license
+        if (!user.subscription || user.subscription.status !== 'active') {
+            return res.status(403).json({
+                success: false,
+                message: 'No active license. Please purchase a subscription.'
+            });
+        }
+
         // Check HWID lock
         if (user.hwid && user.hwid !== hwid) {
             return res.status(403).json({
@@ -187,17 +144,27 @@ app.post('/api/login', async (req, res) => {
         }
 
         // Lock HWID if not already locked
+        const updates = {};
         if (!user.hwid) {
-            await updateUser(user.id, {
-                hwid: hwid,
-                hwidLockedAt: new Date().toISOString()
-            });
+            updates.hwid = hwid;
+            updates.hwidLockedAt = new Date().toISOString();
         }
+
+        // Update last login and stats
+        updates.lastLogin = new Date().toISOString();
+        updates['stats.totalLogins'] = admin.firestore.FieldValue.increment(1);
+        updates['stats.lastLoginDate'] = new Date().toISOString();
+
+        await updateUser(user.id, updates);
 
         return res.json({
             success: true,
             message: 'Login successful',
-            username: user.username
+            username: user.username,
+            subscription: {
+                package: user.subscription.package,
+                status: user.subscription.status
+            }
         });
 
     } catch (error) {
@@ -232,6 +199,12 @@ app.post('/api/web-login', async (req, res) => {
 
         req.session.userId = user.id;
         req.session.username = user.username;
+
+        // Update last login
+        await updateUser(user.id, {
+            lastLogin: new Date().toISOString(),
+            'stats.lastLoginDate': new Date().toISOString()
+        });
 
         // Force save session before responding
         req.session.save((err) => {
@@ -324,18 +297,69 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-// Check Session
-app.get('/api/check-session', (req, res) => {
+// Check Session - Enhanced with user data
+app.get('/api/check-session', async (req, res) => {
     if (req.session.userId) {
-        return res.json({
-            loggedIn: true,
-            user: {
-                id: req.session.userId,
-                username: req.session.username
+        try {
+            const user = await getUserById(req.session.userId);
+            if (user) {
+                // Calculate account age in days
+                const accountAge = Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24));
+                
+                return res.json({
+                    loggedIn: true,
+                    username: user.username,
+                    user: {
+                        username: user.username,
+                        createdAt: user.createdAt,
+                        lastLogin: user.lastLogin,
+                        stats: {
+                            ...user.stats,
+                            accountAge
+                        },
+                        subscription: user.subscription
+                    }
+                });
             }
-        });
+        } catch (error) {
+            console.error('Session check error:', error);
+        }
     }
     return res.json({ loggedIn: false });
+});
+
+// Get User Stats (protected endpoint)
+app.get('/api/user/stats', requireAuth, async (req, res) => {
+    try {
+        const user = await getUserById(req.session.userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const accountAge = Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24));
+
+        res.json({
+            success: true,
+            stats: {
+                accountCreated: user.createdAt,
+                lastLogin: user.lastLogin,
+                totalLogins: user.stats?.totalLogins || 1,
+                accountAgeDays: accountAge,
+                hwidLocked: !!user.hwid,
+                hwidLockedAt: user.hwidLockedAt,
+                subscription: user.subscription
+            }
+        });
+    } catch (error) {
+        console.error('Get stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
 });
 
 // Logout
@@ -366,9 +390,12 @@ app.get('/api/users', async (req, res) => {
                 id: doc.id,
                 username: userData.username,
                 createdAt: userData.createdAt,
+                lastLogin: userData.lastLogin,
                 hwid: userData.hwid,
                 hwidLockedAt: userData.hwidLockedAt,
-                isLocked: !!userData.hwid
+                isLocked: !!userData.hwid,
+                subscription: userData.subscription,
+                stats: userData.stats
             });
         });
 
@@ -430,29 +457,305 @@ app.post('/api/reset-hwid', async (req, res) => {
     }
 });
 
-// Get user's subscription status
-app.get('/api/subscription', async (req, res) => {
-    if (!req.session.userId) {
-        return res.status(401).json({
+// ==================== STRIPE INTEGRATION ====================
+
+// Get Stripe Config
+app.get('/api/stripe/config', (req, res) => {
+    res.json({
+        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
+    });
+});
+
+// Get available packages
+app.get('/api/packages', (req, res) => {
+    res.json({
+        success: true,
+        packages: [
+            {
+                id: 'monthly',
+                name: 'Monthly',
+                price: 19.99,
+                priceId: process.env.STRIPE_PRICE_MONTHLY,
+                features: [
+                    'Full access to software',
+                    'Hardware-locked license',
+                    'Priority support',
+                    'Monthly updates'
+                ]
+            },
+            {
+                id: 'lifetime',
+                name: 'Lifetime',
+                price: 99.99,
+                priceId: process.env.STRIPE_PRICE_LIFETIME,
+                features: [
+                    'Lifetime access',
+                    'Hardware-locked license',
+                    'Priority support',
+                    'All future updates',
+                    'One-time payment'
+                ]
+            }
+        ]
+    });
+});
+
+// Create Stripe Checkout Session
+app.post('/api/stripe/create-checkout-session', requireAuth, async (req, res) => {
+    const { priceId, packageType } = req.body;
+
+    if (!priceId || !packageType) {
+        return res.status(400).json({
             success: false,
-            message: 'Not logged in'
+            message: 'Missing required fields'
         });
     }
-    
+
     try {
         const user = await getUserById(req.session.userId);
-        
         if (!user) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
         }
+
+        // Create or retrieve Stripe customer
+        let customerId = user.subscription?.stripeCustomerId;
         
+        if (!customerId) {
+            const customer = await stripe.customers.create({
+                email: `${user.username}@cursed.local`, // You might want to collect real emails
+                metadata: {
+                    userId: user.id,
+                    username: user.username
+                }
+            });
+            customerId = customer.id;
+            
+            // Save customer ID to user
+            await updateUser(user.id, {
+                'subscription.stripeCustomerId': customerId
+            });
+        }
+
+        // Determine if this is a subscription or one-time payment
+        const isLifetime = packageType === 'lifetime';
+
+        const sessionConfig = {
+            customer: customerId,
+            line_items: [
+                {
+                    price: priceId,
+                    quantity: 1,
+                },
+            ],
+            mode: isLifetime ? 'payment' : 'subscription',
+            success_url: `${req.headers.origin || 'http://localhost:3000'}/dashboard?success=true`,
+            cancel_url: `${req.headers.origin || 'http://localhost:3000'}/dashboard?cancelled=true`,
+            metadata: {
+                userId: user.id,
+                username: user.username,
+                packageType: packageType
+            }
+        };
+
+        const session = await stripe.checkout.sessions.create(sessionConfig);
+
         res.json({
             success: true,
-            subscription: user.subscription || null
+            url: session.url,
+            sessionId: session.id
         });
+
+    } catch (error) {
+        console.error('Stripe session creation error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create checkout session'
+        });
+    }
+});
+
+// Stripe Webhook Handler
+app.post('/api/stripe/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(
+            req.body,
+            sig,
+            process.env.STRIPE_WEBHOOK_SECRET
+        );
+    } catch (err) {
+        console.error('Webhook signature verification failed:', err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    try {
+        switch (event.type) {
+            case 'checkout.session.completed':
+                await handleCheckoutSessionCompleted(event.data.object);
+                break;
+            
+            case 'customer.subscription.updated':
+                await handleSubscriptionUpdated(event.data.object);
+                break;
+            
+            case 'customer.subscription.deleted':
+                await handleSubscriptionDeleted(event.data.object);
+                break;
+            
+            case 'invoice.payment_succeeded':
+                await handlePaymentSucceeded(event.data.object);
+                break;
+            
+            case 'invoice.payment_failed':
+                await handlePaymentFailed(event.data.object);
+                break;
+
+            default:
+                console.log(`Unhandled event type ${event.type}`);
+        }
+
+        res.json({ received: true });
+    } catch (error) {
+        console.error('Webhook handler error:', error);
+        res.status(500).json({ error: 'Webhook handler failed' });
+    }
+});
+
+// Webhook handler functions
+async function handleCheckoutSessionCompleted(session) {
+    const userId = session.metadata.userId;
+    const packageType = session.metadata.packageType;
+    
+    console.log(`Checkout completed for user ${userId}, package: ${packageType}`);
+    
+    const updates = {
+        'subscription.status': 'active',
+        'subscription.package': packageType,
+        'subscription.activatedAt': new Date().toISOString()
+    };
+
+    if (packageType === 'lifetime') {
+        // Lifetime purchase - no subscription ID
+        updates['subscription.currentPeriodEnd'] = null;
+    } else {
+        // Monthly subscription
+        updates['subscription.stripeSubscriptionId'] = session.subscription;
+        
+        // Fetch subscription details to get current_period_end
+        if (session.subscription) {
+            const subscription = await stripe.subscriptions.retrieve(session.subscription);
+            updates['subscription.currentPeriodEnd'] = new Date(subscription.current_period_end * 1000).toISOString();
+        }
+    }
+
+    await updateUser(userId, updates);
+    console.log(`License activated for user ${userId}`);
+}
+
+async function handleSubscriptionUpdated(subscription) {
+    const customerId = subscription.customer;
+    
+    // Find user by customer ID
+    const snapshot = await usersCollection
+        .where('subscription.stripeCustomerId', '==', customerId)
+        .limit(1)
+        .get();
+    
+    if (snapshot.empty) {
+        console.error('User not found for customer:', customerId);
+        return;
+    }
+
+    const userId = snapshot.docs[0].id;
+    
+    const updates = {
+        'subscription.status': subscription.status,
+        'subscription.currentPeriodEnd': new Date(subscription.current_period_end * 1000).toISOString()
+    };
+
+    await updateUser(userId, updates);
+    console.log(`Subscription updated for user ${userId}`);
+}
+
+async function handleSubscriptionDeleted(subscription) {
+    const customerId = subscription.customer;
+    
+    const snapshot = await usersCollection
+        .where('subscription.stripeCustomerId', '==', customerId)
+        .limit(1)
+        .get();
+    
+    if (snapshot.empty) {
+        console.error('User not found for customer:', customerId);
+        return;
+    }
+
+    const userId = snapshot.docs[0].id;
+    
+    await updateUser(userId, {
+        'subscription.status': 'cancelled',
+        'subscription.cancelledAt': new Date().toISOString()
+    });
+    
+    console.log(`Subscription cancelled for user ${userId}`);
+}
+
+async function handlePaymentSucceeded(invoice) {
+    console.log(`Payment succeeded for invoice ${invoice.id}`);
+    // Additional logic if needed for successful payments
+}
+
+async function handlePaymentFailed(invoice) {
+    console.log(`Payment failed for invoice ${invoice.id}`);
+    
+    const customerId = invoice.customer;
+    const snapshot = await usersCollection
+        .where('subscription.stripeCustomerId', '==', customerId)
+        .limit(1)
+        .get();
+    
+    if (!snapshot.empty) {
+        const userId = snapshot.docs[0].id;
+        // You might want to notify the user or take action here
+        console.log(`Payment failed for user ${userId}`);
+    }
+}
+
+// Get Subscription Status (for dashboard)
+app.get('/api/subscription', requireAuth, async (req, res) => {
+    try {
+        const user = await getUserById(req.session.userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        if (!user.subscription || user.subscription.status === 'inactive') {
+            return res.json({
+                success: true,
+                subscription: null
+            });
+        }
+
+        res.json({
+            success: true,
+            subscription: {
+                status: user.subscription.status,
+                package: user.subscription.package,
+                activatedAt: user.subscription.activatedAt,
+                currentPeriodEnd: user.subscription.currentPeriodEnd,
+                cancelledAt: user.subscription.cancelledAt
+            }
+        });
+
     } catch (error) {
         console.error('Get subscription error:', error);
         res.status(500).json({
@@ -462,149 +765,43 @@ app.get('/api/subscription', async (req, res) => {
     }
 });
 
-// Get Stripe publishable key
-app.get('/api/stripe/config', (req, res) => {
-    res.json({
-        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
-    });
-});
-
-// Get package pricing info
-app.get('/api/packages', (req, res) => {
-    res.json({
-        packages: [
-            {
-                id: 'monthly',
-                name: 'Monthly Subscription',
-                price: 20.00,
-                priceId: process.env.STRIPE_PRICE_MONTHLY,
-                billing: 'monthly',
-                features: [
-                    'Hardware-locked authentication',
-                    'Single device license',
-                    'Email support',
-                    'Regular updates'
-                ]
-            },
-            {
-                id: 'lifetime',
-                name: 'Lifetime Subscription',
-                price: 149.00,
-                priceId: process.env.STRIPE_PRICE_LIFETIME,
-                billing: 'one-time',
-                features: [
-                    'Everything in Monthly',
-                    'Dedicated account manager',
-                    'Instant HWID reset access',
-                    'Beta access to new features',
-                    'Lifetime updates'
-                ]
-            }
-        ]
-    });
-});
-
-// Create Stripe checkout session
-app.post('/api/stripe/create-checkout-session', async (req, res) => {
-    const { priceId, packageType } = req.body;
-    
-    if (!req.session.userId) {
-        return res.json({
-            success: false,
-            message: 'You must be logged in to purchase'
-        });
-    }
-    
+// Cancel Subscription
+app.post('/api/stripe/cancel-subscription', requireAuth, async (req, res) => {
     try {
         const user = await getUserById(req.session.userId);
-        
         if (!user) {
-            return res.json({
+            return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
         }
-        
-        // Determine if this is a subscription or one-time payment
-        const mode = packageType === 'lifetime' ? 'payment' : 'subscription';
-        
-        const sessionConfig = {
-            mode: mode,
-            line_items: [
-                {
-                    price: priceId,
-                    quantity: 1,
-                },
-            ],
-            success_url: `${req.headers.origin}/dashboard.html?success=true`,
-            cancel_url: `${req.headers.origin}/?cancelled=true`,
-            customer_email: user.username + '@cursed.local',
-            metadata: {
-                userId: user.id,
-                username: user.username,
-                packageType: packageType
-            }
-        };
-        
-        const session = await stripe.checkout.sessions.create(sessionConfig);
-        
-        res.json({
-            success: true,
-            sessionId: session.id,
-            url: session.url
-        });
-    } catch (error) {
-        console.error('Stripe error:', error);
-        res.json({
-            success: false,
-            message: 'Failed to create checkout session'
-        });
-    }
-});
 
-// Cancel subscription
-app.post('/api/stripe/cancel-subscription', async (req, res) => {
-    if (!req.session.userId) {
-        return res.json({
-            success: false,
-            message: 'Not logged in'
+        if (!user.subscription?.stripeSubscriptionId) {
+            return res.status(400).json({
+                success: false,
+                message: 'No active subscription to cancel'
+            });
+        }
+
+        // Cancel the subscription at period end
+        const subscription = await stripe.subscriptions.update(
+            user.subscription.stripeSubscriptionId,
+            { cancel_at_period_end: true }
+        );
+
+        await updateUser(user.id, {
+            'subscription.status': 'cancelled',
+            'subscription.cancelledAt': new Date().toISOString()
         });
-    }
-    
-    try {
-        const user = await getUserById(req.session.userId);
-        
-        if (!user || !user.subscription) {
-            return res.json({
-                success: false,
-                message: 'No active subscription found'
-            });
-        }
-        
-        // Can't cancel one-time payments (lifetime)
-        if (user.subscription.mode === 'payment' || user.subscription.package === 'lifetime') {
-            return res.json({
-                success: false,
-                message: 'Lifetime subscriptions cannot be cancelled. This is a one-time payment.'
-            });
-        }
-        
-        if (!user.subscription.subscriptionId) {
-            return res.json({
-                success: false,
-                message: 'No subscription ID found'
-            });
-        }
-        
-        await stripe.subscriptions.cancel(user.subscription.subscriptionId);
-        
+
         res.json({
             success: true,
-            message: 'Subscription cancelled successfully'
+            message: 'Subscription cancelled. Access will continue until the end of the billing period.'
         });
+
     } catch (error) {
-        console.error('Stripe cancel error:', error);
-        res.json({
+        console.error('Cancel subscription error:', error);
+        res.status(500).json({
             success: false,
             message: 'Failed to cancel subscription'
         });
@@ -636,4 +833,5 @@ app.get('/admin', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Stripe integration: ${process.env.STRIPE_SECRET_KEY ? 'Enabled' : 'Disabled'}`);
 });
