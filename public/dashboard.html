@@ -298,6 +298,12 @@
             letter-spacing: 1px;
         }
 
+        .stat-subvalue {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
         /* Order Section */
         .order-section {
             background: rgba(30, 30, 30, 0.95);
@@ -344,96 +350,20 @@
             color: #7a8396;
         }
 
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .btn-action {
-            flex: 1;
-            padding: 12px 24px;
-            background: transparent;
-            border: 1px solid #404040;
-            border-radius: 6px;
+        .no-subscription {
+            text-align: center;
+            padding: 40px 20px;
             color: #999;
-            font-size: 13px;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
         }
 
-        .btn-action:hover {
-            border-color: #b4bace;
-            color: #e5e5e5;
-            background: rgba(180, 186, 206, 0.05);
-        }
-
-        .btn-action.danger {
-            border-color: #dc3c3c;
-            color: #dc3c3c;
-        }
-
-        .btn-action.danger:hover {
-            background: rgba(220, 60, 60, 0.1);
-        }
-
-        /* Balance Card */
-        .balance-card {
-            background: rgba(30, 30, 30, 0.95);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-        }
-
-        .balance-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .balance-title {
-            font-size: 13px;
-            color: #999;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .balance-value {
-            font-size: 32px;
-            font-weight: 300;
+        .no-subscription h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
             color: #b4bace;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-        }
-
-        .btn-topup {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%);
-            border: none;
-            border-radius: 4px;
-            color: #1a1a1a;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-        }
-
-        .btn-topup:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(180, 186, 206, 0.3);
         }
 
         /* Responsive */
-        @media (max-width: 1024px) {
+        @media (max-width: 968px) {
             .main-container {
                 flex-direction: column;
             }
@@ -441,19 +371,11 @@
             .sidebar {
                 width: 100%;
             }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
         }
 
         @media (max-width: 640px) {
             .stats-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .action-buttons {
-                flex-direction: column;
             }
 
             .nav-links {
@@ -476,9 +398,7 @@
             <div class="logo">CURSED</div>
             <div class="nav-links">
                 <a href="index.html">Home</a>
-                <a href="#products">Products</a>
-                <a href="#feedback">Feedback</a>
-                <a href="#status">Status</a>
+                <a href="index.html#products">Products</a>
                 <a href="dashboard.html" class="active">Dashboard</a>
             </div>
             <div class="nav-right">
@@ -495,7 +415,7 @@
             <div class="sidebar-card">
                 <div class="sidebar-header">
                     <h2 class="sidebar-title">Customer Dashboard</h2>
-                    <p class="user-email">Logged in as<br><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1e6b6d7b6c5e7b667f736e727b307d7173">[email&#160;protected]</a></p>
+                    <p class="user-email" id="sidebarUsername">Loading...</p>
                 </div>
 
                 <ul class="sidebar-nav">
@@ -508,46 +428,25 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#">
+                        <a href="admin.html">
                             <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
                             </svg>
-                            Orders
+                            Admin Panel
                         </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 9h-2V5h2v6zm0 4h-2v-2h2v2z"/>
-                            </svg>
-                            Tickets
-                        </a>
-                    </li>
-                    <li>
-
-                                                <a href="#">
-                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                            </svg>
-                            DELETE ACCOUNT
-                        </a>
-                    </li>
-                    <li>
-                        
-                            </svg>
                     </li>
                 </ul>
 
                 <!-- Subscription Status -->
                 <div id="subscriptionSection" style="margin: 20px 0; padding: 20px; background: rgba(40, 40, 40, 0.5); border-radius: 8px; border-left: 4px solid #666;">
-                    <div style="font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Subscription</div>
+                    <div style="font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">License Status</div>
                     <div id="subscriptionStatus" style="color: #e5e5e5; font-size: 16px; margin-bottom: 8px;">Loading...</div>
                     <div id="subscriptionPackage" style="color: #999; font-size: 13px; margin-bottom: 15px;"></div>
                     <button id="manageSubscriptionBtn" style="display: none; width: 100%; padding: 8px; background: #dc3c3c; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 12px; transition: background 0.3s ease;">
                         Cancel Subscription
                     </button>
-                    <a href="index.html#products" id="upgradeBtn" style="display: none; width: 100%; padding: 8px; background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%); border: none; border-radius: 4px; color: #1a1a1a; cursor: pointer; font-size: 12px; text-align: center; text-decoration: none; display: inline-block; font-weight: 600;">
-                        Subscribe Now
+                    <a href="index.html#products" id="upgradeBtn" style="display: none; width: 100%; padding: 8px; background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%); border: none; border-radius: 4px; color: #1a1a1a; cursor: pointer; font-size: 12px; text-align: center; text-decoration: none; font-weight: 600; display: inline-block;">
+                        Get License
                     </a>
                 </div>
 
@@ -565,34 +464,41 @@
             <!-- Stats Grid -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Completed Orders</div>
-                    <div class="stat-value">1</div>
+                    <div class="stat-label">Account Age</div>
+                    <div class="stat-value" id="accountAge">Loading...</div>
+                    <div class="stat-subvalue" id="accountAgeDate"></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Total Spent</div>
-                    <div class="stat-value">€12.01</div>
+                    <div class="stat-label">Total Logins</div>
+                    <div class="stat-value" id="totalLogins">Loading...</div>
+                    <div class="stat-subvalue" id="lastLoginDate"></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Customer Since</div>
-                    <div class="stat-value">Nov 11, 2025</div>
+                    <div class="stat-label">Hardware Lock</div>
+                    <div class="stat-value" id="hwidStatus">Loading...</div>
+                    <div class="stat-subvalue" id="hwidDate"></div>
                 </div>
             </div>
 
-            <!-- Latest Order -->
-            <div class="order-section">
+            <!-- License Info Section -->
+            <div class="order-section" id="licenseSection">
                 <div class="section-header">
-                    <h3 class="section-title">Latest Order</h3>
+                    <h3 class="section-title">Active License</h3>
                 </div>
-                <div class="order-card">
-                    <h4 class="order-title">FiveM Bypass Monthly</h4>
-                    <div class="order-meta">
-                        Invoice <span class="order-invoice">#add44c09954ff-00D000078S4708</span> - Nov 11, 2025
+                <div id="licenseContent">
+                    <div class="no-subscription">
+                        <h3>No Active License</h3>
+                        <p>Purchase a license to access CURSED software</p>
+                        <a href="index.html#products" style="display: inline-block; margin-top: 20px; padding: 12px 30px; background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%); border-radius: 4px; color: #1a1a1a; text-decoration: none; font-weight: 600; letter-spacing: 1px;">
+                            View Pricing
+                        </a>
                     </div>
                 </div>
             </div>
+        </main>
+    </div>
 
-
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    <script>
         // Particle system
         const canvas = document.getElementById('particleCanvas');
         const ctx = canvas.getContext('2d');
@@ -631,12 +537,10 @@
             }
         }
 
-        // Initialize particles
         for (let i = 0; i < particleCount; i++) {
             particles.push(new Particle());
         }
 
-        // Draw connections
         function drawConnections() {
             for (let i = 0; i < particles.length; i++) {
                 for (let j = i + 1; j < particles.length; j++) {
@@ -657,105 +561,151 @@
             }
         }
 
-        // Animation loop
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             drawConnections();
-            
             particles.forEach(particle => {
                 particle.update();
                 particle.draw();
             });
-
             requestAnimationFrame(animate);
         }
 
         animate();
 
-        // Handle window resize
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         });
 
-        // Load user data from session
+        // Helper function to format dates
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function formatDateTime(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Load user data and stats
         async function loadUserData() {
             try {
                 const response = await fetch('/api/check-session');
                 const data = await response.json();
                 
                 if (!data.loggedIn) {
-                    // Not logged in, redirect to login
                     window.location.href = 'login.html';
                     return;
                 }
                 
-                // Update UI with user info
-                const usernameDisplay = document.getElementById('usernameDisplay');
-                if (usernameDisplay) {
-                    usernameDisplay.textContent = data.user.username;
+                const user = data.user;
+                
+                // Update username displays
+                document.getElementById('usernameDisplay').textContent = user.username;
+                document.getElementById('sidebarUsername').innerHTML = `Logged in as<br><strong>${user.username}</strong>`;
+                
+                // Update stats
+                const accountAgeDays = user.stats?.accountAge || 0;
+                document.getElementById('accountAge').textContent = accountAgeDays + ' days';
+                document.getElementById('accountAgeDate').textContent = 'Since ' + formatDate(user.createdAt);
+                
+                document.getElementById('totalLogins').textContent = user.stats?.totalLogins || 1;
+                document.getElementById('lastLoginDate').textContent = 'Last: ' + formatDateTime(user.lastLogin);
+                
+                // Hardware lock status
+                const hwidStatusEl = document.getElementById('hwidStatus');
+                const hwidDateEl = document.getElementById('hwidDate');
+                if (user.hwid) {
+                    hwidStatusEl.textContent = 'Locked';
+                    hwidStatusEl.style.color = '#3cdc64';
+                    hwidDateEl.textContent = 'Since ' + formatDate(user.hwidLockedAt);
+                } else {
+                    hwidStatusEl.textContent = 'Not Locked';
+                    hwidStatusEl.style.color = '#999';
+                    hwidDateEl.textContent = 'First login will lock HWID';
                 }
                 
-                const userEmail = document.querySelector('.user-email');
-                if (userEmail) {
-                    userEmail.innerHTML = `Logged in as<br>${data.user.username}`;
-                }
+                // Load subscription info
+                loadSubscription(user.subscription);
+                
             } catch (error) {
-                console.error('Session check failed:', error);
+                console.error('Failed to load user data:', error);
                 window.location.href = 'login.html';
             }
         }
 
-        loadUserData();
-
         // Load subscription status
-        async function loadSubscription() {
-            try {
-                const response = await fetch('/api/subscription');
-                const data = await response.json();
+        function loadSubscription(subscription) {
+            const statusEl = document.getElementById('subscriptionStatus');
+            const packageEl = document.getElementById('subscriptionPackage');
+            const manageBtnEl = document.getElementById('manageSubscriptionBtn');
+            const upgradeBtnEl = document.getElementById('upgradeBtn');
+            const licenseContent = document.getElementById('licenseContent');
+            
+            if (subscription && subscription.status === 'active') {
+                const sub = subscription;
                 
-                const statusEl = document.getElementById('subscriptionStatus');
-                const packageEl = document.getElementById('subscriptionPackage');
-                const manageBtnEl = document.getElementById('manageSubscriptionBtn');
-                const upgradeBtnEl = document.getElementById('upgradeBtn');
-                
-                if (data.success && data.subscription) {
-                    const sub = data.subscription;
-                    
-                    // Handle lifetime vs monthly differently
-                    if (sub.package === 'lifetime') {
-                        statusEl.textContent = 'Lifetime Access';
-                        statusEl.style.color = '#3cdc64';
-                        packageEl.textContent = 'LIFETIME Package - Permanent Access';
-                        manageBtnEl.style.display = 'none'; // Can't cancel lifetime
-                        upgradeBtnEl.style.display = 'none';
-                    } else {
-                        statusEl.textContent = sub.status === 'active' ? 'Active Subscription' : 'Subscription Cancelled';
-                        statusEl.style.color = sub.status === 'active' ? '#3cdc64' : '#dc3c3c';
-                        packageEl.textContent = sub.package.toUpperCase() + ' Package';
-                        
-                        if (sub.status === 'active') {
-                            manageBtnEl.style.display = 'block';
-                            upgradeBtnEl.style.display = 'none';
-                        } else {
-                            manageBtnEl.style.display = 'none';
-                            upgradeBtnEl.style.display = 'inline-block';
-                        }
-                    }
-                } else {
-                    statusEl.textContent = 'No Active Subscription';
-                    statusEl.style.color = '#999';
-                    packageEl.textContent = 'Get started with a subscription';
+                // Update sidebar status
+                if (sub.package === 'lifetime') {
+                    statusEl.textContent = '✓ Lifetime Access';
+                    statusEl.style.color = '#3cdc64';
+                    packageEl.textContent = 'LIFETIME Package - Permanent Access';
                     manageBtnEl.style.display = 'none';
-                    upgradeBtnEl.style.display = 'inline-block';
+                    upgradeBtnEl.style.display = 'none';
+                } else {
+                    statusEl.textContent = '✓ Active';
+                    statusEl.style.color = '#3cdc64';
+                    packageEl.textContent = (sub.package || 'monthly').toUpperCase() + ' Package';
+                    manageBtnEl.style.display = 'block';
+                    upgradeBtnEl.style.display = 'none';
                 }
-            } catch (error) {
-                console.error('Failed to load subscription:', error);
+                
+                // Update license section
+                licenseContent.innerHTML = `
+                    <div class="order-card">
+                        <h4 class="order-title">CURSED ${(sub.package || 'monthly').toUpperCase()} License</h4>
+                        <div class="order-meta">
+                            Activated: ${formatDate(sub.activatedAt)}
+                            ${sub.currentPeriodEnd ? ` • Renews: ${formatDate(sub.currentPeriodEnd)}` : ''}
+                        </div>
+                        <div style="margin-top: 15px; padding: 15px; background: rgba(60, 220, 100, 0.1); border-left: 3px solid #3cdc64; border-radius: 4px;">
+                            <div style="color: #3cdc64; font-size: 13px; font-weight: 600; margin-bottom: 5px;">✓ LICENSE ACTIVE</div>
+                            <div style="color: #999; font-size: 12px;">You can now use CURSED software on your computer</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statusEl.textContent = 'No Active License';
+                statusEl.style.color = '#999';
+                packageEl.textContent = 'Purchase a license to get started';
+                manageBtnEl.style.display = 'none';
+                upgradeBtnEl.style.display = 'inline-block';
+                
+                licenseContent.innerHTML = `
+                    <div class="no-subscription">
+                        <h3>No Active License</h3>
+                        <p>Purchase a license to access CURSED software</p>
+                        <a href="index.html#products" style="display: inline-block; margin-top: 20px; padding: 12px 30px; background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%); border-radius: 4px; color: #1a1a1a; text-decoration: none; font-weight: 600; letter-spacing: 1px;">
+                            View Pricing
+                        </a>
+                    </div>
+                `;
             }
         }
-
-        loadSubscription();
 
         // Handle subscription cancellation
         const manageSubBtn = document.getElementById('manageSubscriptionBtn');
@@ -773,8 +723,8 @@
                     const data = await response.json();
                     
                     if (data.success) {
-                        alert('Subscription cancelled successfully');
-                        loadSubscription(); // Reload subscription status
+                        alert('Subscription cancelled successfully. You will have access until the end of your billing period.');
+                        location.reload();
                     } else {
                         alert('Failed to cancel subscription: ' + data.message);
                     }
@@ -789,19 +739,18 @@
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('success') === 'true') {
             setTimeout(() => {
-                alert('Payment successful! Your subscription is now active.');
-                // Remove query params from URL
+                alert('✓ Payment successful! Your license is now active.\n\nYou can now download and use CURSED software.');
                 window.history.replaceState({}, document.title, window.location.pathname);
-                loadSubscription();
+                location.reload();
             }, 500);
         } else if (urlParams.get('cancelled') === 'true') {
             setTimeout(() => {
-                alert('Payment cancelled. You can try again anytime from the pricing page.');
+                alert('Payment cancelled. You can purchase a license anytime from the pricing page.');
                 window.history.replaceState({}, document.title, window.location.pathname);
             }, 500);
         }
 
-        // Logout functionality for both nav button and sidebar button
+        // Logout functionality
         async function handleLogout() {
             if (confirm('Are you sure you want to logout?')) {
                 try {
@@ -823,7 +772,7 @@
             }
         }
 
-        // Attach logout handler to nav button
+        // Attach logout handlers
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', (e) => {
@@ -832,13 +781,15 @@
             });
         }
 
-        // Attach logout handler to sidebar button
         const sidebarLogoutBtn = document.querySelector('.logout-btn');
         if (sidebarLogoutBtn) {
             sidebarLogoutBtn.addEventListener('click', () => {
                 handleLogout();
             });
         }
+
+        // Initialize dashboard
+        loadUserData();
     </script>
 </body>
 </html>
