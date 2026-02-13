@@ -382,6 +382,12 @@
                 display: none;
             }
         }
+
+        /* Loading spinner animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -738,11 +744,60 @@
         // Check for payment success/cancel in URL
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('success') === 'true') {
-            setTimeout(() => {
-                alert('✓ Payment successful! Your license is now active.\n\nYou can now download and use CURSED software.');
-                window.history.replaceState({}, document.title, window.location.pathname);
-                location.reload();
-            }, 500);
+            // Payment completed! Now we need to wait for webhook to activate license
+            console.log('💳 Payment completed, waiting for license activation...');
+            
+            // Remove the URL parameter first
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // Show loading message
+            const licenseContent = document.getElementById('licenseContent');
+            if (licenseContent) {
+                licenseContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 24px; margin-bottom: 15px;">⏳</div>
+                        <h3 style="color: #b4bace; margin-bottom: 10px;">Activating Your License...</h3>
+                        <p style="color: #999;">Please wait while we process your payment. This usually takes 5-10 seconds.</p>
+                        <div style="margin-top: 20px;">
+                            <div class="spinner" style="border: 3px solid #404040; border-top: 3px solid #b4bace; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Poll for subscription activation
+            let pollAttempts = 0;
+            const maxAttempts = 30; // Try for 30 seconds
+            
+            const pollInterval = setInterval(async () => {
+                pollAttempts++;
+                console.log(`🔍 Checking activation status (attempt ${pollAttempts}/${maxAttempts})...`);
+                
+                try {
+                    const response = await fetch('/api/check-session');
+                    const data = await response.json();
+                    
+                    if (data.loggedIn && data.user && data.user.subscription && data.user.subscription.status === 'active') {
+                        // License is now active!
+                        clearInterval(pollInterval);
+                        console.log('✅ License activated successfully!');
+                        
+                        alert('✓ Payment successful! Your license is now active.\n\nYou can now download and use CURSED software.');
+                        location.reload();
+                    } else if (pollAttempts >= maxAttempts) {
+                        // Timeout - webhook might be delayed
+                        clearInterval(pollInterval);
+                        console.warn('⚠️ License activation taking longer than expected');
+                        
+                        if (confirm('Your payment was successful, but license activation is taking longer than expected.\n\nThis is usually just a delay. Would you like to refresh the page now?\n\n(If it still doesn\'t show, please wait 1-2 minutes and refresh again)')) {
+                            location.reload();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error polling subscription status:', error);
+                }
+            }, 1000); // Check every second
+            
         } else if (urlParams.get('cancelled') === 'true') {
             setTimeout(() => {
                 alert('Payment cancelled. You can purchase a license anytime from the pricing page.');
