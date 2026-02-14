@@ -936,88 +936,335 @@
         </div>
     </div>
 
-    <!-- Products Section -->
-    <section class="products-section" id="products">
-        <div class="products-header">
-            <div class="section-badge">Our Products</div>
-            <h2 class="section-title">Choose Your Plan</h2>
-            <p class="section-subtitle">
-                Premium software packages.
-            </p>
-        </div>
-        <div class="products-grid">
-            <div class="product-card">
-                <div class="product-image">
-                    <div class="product-logo">MONTHLY</div>
-                </div>
-                <div class="product-content">
-                    <h3 class="product-name">Monthly Subscribtion</h3>
-                    <p class="product-description">
-                        Get access to CURSED BYPASS for 30 days.
-                    </p>
-                    <div class="product-features">
-                        <div class="product-feature-item">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                            </svg>
-                    <div class="product-pricing">
-                        <div class="product-price">
-                            <span class="price-amount">USD$ 20</span>
-                            <span class="price-period">/month</span>
-                        </div>
-                        <button class="product-cta btn-purchase" data-package="monthly">Get Started</button>
-                    </div>
-                </div>
-            </div>
+    <!-- REPLACE YOUR PRODUCTS SECTION WITH THIS -->
 
+<!-- Add this CSS to your <style> section -->
+<style>
+/* Products Section - Improved */
+.products-section {
+    position: relative;
+    z-index: 10;
+    padding: 100px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.products-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.section-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    background: rgba(180, 186, 206, 0.1);
+    border: 1px solid rgba(180, 186, 206, 0.2);
+    border-radius: 20px;
+    color: #b4bace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+}
+
+.section-subtitle {
+    font-size: 18px;
+    color: #999;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 40px;
+    margin-top: 60px;
+}
+
+.product-card {
+    background: rgba(30, 30, 30, 0.6);
+    border-radius: 16px;
+    border: 1px solid rgba(180, 186, 206, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card:hover {
+    border-color: rgba(180, 186, 206, 0.3);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.product-image {
+    background: linear-gradient(135deg, rgba(180, 186, 206, 0.15) 0%, rgba(100, 120, 160, 0.1) 100%);
+    padding: 50px 40px;
+    text-align: center;
+    border-bottom: 1px solid rgba(180, 186, 206, 0.1);
+}
+
+.product-logo {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: #b4bace;
+    text-shadow: 0 0 20px rgba(180, 186, 206, 0.3);
+}
+
+.product-content {
+    padding: 40px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-name {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 15px;
+    letter-spacing: 0.5px;
+}
+
+.product-description {
+    font-size: 16px;
+    color: #999;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.product-features {
+    margin-bottom: 30px;
+    flex: 1;
+}
+
+.product-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    color: #ccc;
+    font-size: 15px;
+}
+
+.product-feature-item svg {
+    width: 20px;
+    height: 20px;
+    color: #b4bace;
+    flex-shrink: 0;
+}
+
+.product-pricing {
+    border-top: 1px solid rgba(180, 186, 206, 0.1);
+    padding-top: 30px;
+    margin-top: auto;
+}
+
+.product-price {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 25px;
+}
+
+.price-amount {
+    font-size: 42px;
+    font-weight: 700;
+    color: #b4bace;
+    letter-spacing: -1px;
+}
+
+.price-period {
+    font-size: 16px;
+    color: #666;
+}
+
+.product-cta {
+    width: 100%;
+    padding: 16px 32px;
+    background: rgba(180, 186, 206, 0.1);
+    border: 2px solid rgba(180, 186, 206, 0.3);
+    border-radius: 8px;
+    color: #e5e5e5;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.product-cta:hover {
+    background: rgba(180, 186, 206, 0.2);
+    border-color: #b4bace;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* Featured card styling */
+.product-card.featured {
+    border-color: #b4bace;
+    position: relative;
+}
+
+.product-card.featured::before {
+    content: 'MOST POPULAR';
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%);
+    color: #1a1a1a;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    z-index: 1;
+}
+
+.product-card.featured .product-cta {
+    background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%);
+    border: none;
+    color: #1a1a1a;
+}
+
+.product-card.featured .product-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(180, 186, 206, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
     
+    .section-title {
+        font-size: 36px;
+    }
+}
+</style>
 
-            <div class="product-card">
-                <div class="product-image">
-                    <div class="product-logo">LIFETIME</div>
+<!-- HTML - Products Section -->
+<section class="products-section" id="products">
+    <div class="products-header">
+        <div class="section-badge">Our Products</div>
+        <h2 class="section-title">Choose Your Plan</h2>
+        <p class="section-subtitle">
+            Premium software packages designed for professionals who demand the best.
+        </p>
+    </div>
+    
+    <div class="products-grid">
+        <!-- Monthly Plan -->
+        <div class="product-card">
+            <div class="product-image">
+                <div class="product-logo">MONTHLY</div>
+            </div>
+            <div class="product-content">
+                <h3 class="product-name">Monthly Subscription</h3>
+                <p class="product-description">
+                    Get access to CURSED BYPASS for 30 days with full features and priority support.
+                </p>
+                <div class="product-features">
+                    <div class="product-feature-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>Full feature access</span>
+                    </div>
+                    <div class="product-feature-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>30 days of access</span>
+                    </div>
+                    <div class="product-feature-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>Priority support</span>
+                    </div>
+                    <div class="product-feature-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>Regular updates</span>
+                    </div>
                 </div>
-                <div class="product-content">
-                    <h3 class="product-name">Lifetime Subscribtion</h3>
-                    <p class="product-description">
-                        Get access to CURSED BYPASS forever.
-                    </p>
-                    <div class="product-features">
-                        <div class="product-feature-item">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                            </svg>
-                            <span>Everything in Pro</span>
-                        </div>
-                        <div class="product-feature-item">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                            </svg>
-                            <span>Dedicated account manager</span>
-                        </div>
-                        <div class="product-feature-item">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                            </svg>
-                            <span>Instant HWID reset access</span>
-                        </div>
-                        <div class="product-feature-item">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                            </svg>
-                            <span>Beta access to new features</span>
-                        </div>
+                <div class="product-pricing">
+                    <div class="product-price">
+                        <span class="price-amount">$20</span>
+                        <span class="price-period">/month</span>
                     </div>
-                    <div class="product-pricing">
-                        <div class="product-price">
-                            <span class="price-amount">USD$ 149</span>
-                            <span class="price-period">/one-time payment</span>
-                        </div>
-                        <button class="product-cta btn-purchase" data-package="lifetime">Get Started</button>
-                    </div>
+                    <button class="product-cta btn-purchase" data-package="monthly">Get Started</button>
                 </div>
             </div>
         </div>
-    </section>
+
+        <!-- Lifetime Plan -->
+        <div class="product-card featured">
+            <div class="product-image">
+                <div class="product-logo">LIFETIME</div>
+            </div>
+            <div class="product-content">
+                <h3 class="product-name">Lifetime Subscription</h3>
+                <p class="product-description">
+                    Get access to CURSED BYPASS forever with exclusive benefits and VIP treatment.
+                </p>
+                <div class="product-features">
+                    <div class="product-feature-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>Lifetime access</span>
+                    </div>
+                    <div class="product-feature-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>Dedicated account manager</span>
+                    </div>
+                    <div class="product-feature-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>Instant HWID reset access</span>
+                    </div>
+                    <div class="product-feature-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>Beta access to new features</span>
+                    </div>
+                    <div class="product-feature-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>VIP Discord role</span>
+                    </div>
+                </div>
+                <div class="product-pricing">
+                    <div class="product-price">
+                        <span class="price-amount">$149</span>
+                        <span class="price-period">/one-time</span>
+                    </div>
+                    <button class="product-cta btn-purchase" data-package="lifetime">Get Started</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 
     <!-- Testimonials Section -->
@@ -1459,3 +1706,4 @@
     </script>
 </body>
 </html>
+
