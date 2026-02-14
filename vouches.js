@@ -1,15 +1,7 @@
 const { Client, GatewayIntentBits, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const admin = require('firebase-admin');
 
-// Initialize Firebase (reuse the same credentials as server.js)
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
-
-if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
-}
-
+// Get existing Firebase app instance (already initialized in server.js)
 const db = admin.firestore();
 const vouchesCollection = db.collection('vouches');
 
@@ -24,14 +16,14 @@ const client = new Client({
 
 // Bot configuration
 const PREFIX = '!';
-const VOUCH_CHANNEL_ID = process.env.VOUCH_CHANNEL_ID || null; // Set this in your .env
+const VOUCH_CHANNEL_ID = process.env.VOUCH_CHANNEL_ID || null;
 
 client.once('ready', () => {
     console.log(`✅ Discord bot logged in as ${client.user.tag}`);
     console.log(`📝 Vouch command: ${PREFIX}vouch @user [rating] [message]`);
     
     // Set bot status
-    client.user.setActivity('for vouches', { type: 'WATCHING' });
+    client.user.setActivity('for vouches', { type: 3 }); // Type 3 = WATCHING
 });
 
 client.on('messageCreate', async (message) => {
@@ -94,8 +86,8 @@ client.on('messageCreate', async (message) => {
                 channelId: message.channel.id,
                 messageId: message.id,
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                approved: false, // Requires admin approval
-                featured: false, // Can be featured on website
+                approved: false,
+                featured: false,
             };
 
             const vouchRef = await vouchesCollection.add(vouchData);
@@ -117,22 +109,26 @@ client.on('messageCreate', async (message) => {
             // Notify admins/moderators if there's a log channel
             const logChannelId = process.env.VOUCH_LOG_CHANNEL_ID;
             if (logChannelId) {
-                const logChannel = await client.channels.fetch(logChannelId);
-                if (logChannel) {
-                    const logEmbed = new EmbedBuilder()
-                        .setColor('#ffa500')
-                        .setTitle('🔔 New Vouch Pending Approval')
-                        .setDescription(`**${message.author.tag}** vouched for **${mentionedUser.tag}**`)
-                        .addFields(
-                            { name: 'Rating', value: '⭐'.repeat(rating), inline: true },
-                            { name: 'Message', value: vouchMessage, inline: false },
-                            { name: 'Approve', value: `\`!approve ${vouchRef.id}\``, inline: true },
-                            { name: 'Reject', value: `\`!reject ${vouchRef.id}\``, inline: true }
-                        )
-                        .setFooter({ text: `Vouch ID: ${vouchRef.id}` })
-                        .setTimestamp();
+                try {
+                    const logChannel = await client.channels.fetch(logChannelId);
+                    if (logChannel) {
+                        const logEmbed = new EmbedBuilder()
+                            .setColor('#ffa500')
+                            .setTitle('🔔 New Vouch Pending Approval')
+                            .setDescription(`**${message.author.tag}** vouched for **${mentionedUser.tag}**`)
+                            .addFields(
+                                { name: 'Rating', value: '⭐'.repeat(rating), inline: true },
+                                { name: 'Message', value: vouchMessage, inline: false },
+                                { name: 'Approve', value: `\`!approve ${vouchRef.id}\``, inline: true },
+                                { name: 'Reject', value: `\`!reject ${vouchRef.id}\``, inline: true }
+                            )
+                            .setFooter({ text: `Vouch ID: ${vouchRef.id}` })
+                            .setTimestamp();
 
-                    await logChannel.send({ embeds: [logEmbed] });
+                        await logChannel.send({ embeds: [logEmbed] });
+                    }
+                } catch (error) {
+                    console.error('Failed to send log channel notification:', error);
                 }
             }
 
@@ -225,7 +221,7 @@ client.on('messageCreate', async (message) => {
         }
     }
 
-    // !feature command (admin only) - marks a vouch to be featured on website
+    // !feature command (admin only)
     if (command === 'feature') {
         if (!message.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
             return message.reply('❌ You do not have permission to feature vouches.');
@@ -245,6 +241,11 @@ client.on('messageCreate', async (message) => {
             }
 
             const vouchData = vouchDoc.data();
+            
+            if (!vouchData.approved) {
+                return message.reply('❌ Vouch must be approved before it can be featured.');
+            }
+
             const newFeaturedState = !vouchData.featured;
 
             await vouchRef.update({
@@ -265,7 +266,7 @@ client.on('messageCreate', async (message) => {
         }
     }
 
-    // !vouches command - show vouch statistics
+    // !vouches command
     if (command === 'vouches') {
         const mentionedUser = message.mentions.users.first() || message.author;
 
@@ -352,7 +353,19 @@ client.on('messageCreate', async (message) => {
     }
 });
 
+// Error handling
+client.on('error', error => {
+    console.error('Discord client error:', error);
+});
+
+process.on('unhandledRejection', error => {
+    console.error('Unhandled promise rejection:', error);
+});
+
 // Login to Discord
-client.login(process.env.DISCORD_BOT_TOKEN);
+client.login(process.env.DISCORD_BOT_TOKEN).catch(error => {
+    console.error('Failed to login to Discord:', error);
+    console.log('Please check your DISCORD_BOT_TOKEN in environment variables');
+});
 
 module.exports = client;
