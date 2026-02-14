@@ -252,87 +252,89 @@
         .trust-label {
             font-size: 13px;
             color: #666;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         /* Features Section */
-        .features-section {
+        .features-intro {
             position: relative;
             z-index: 10;
-            padding: 100px 40px;
+            padding: 100px 40px 60px;
             max-width: 1400px;
             margin: 0 auto;
+            text-align: center;
         }
 
-        .features-header {
-            text-align: center;
-            margin-bottom: 80px;
+        .section-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(180, 186, 206, 0.1);
+            border-radius: 50px;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #b4bace;
+            margin-bottom: 20px;
+            text-transform: uppercase;
         }
 
         .section-title {
             font-size: 48px;
             font-weight: 700;
+            letter-spacing: 2px;
             color: #ffffff;
             margin-bottom: 20px;
-            letter-spacing: 1px;
         }
 
         .section-subtitle {
             font-size: 18px;
             color: #999;
             max-width: 700px;
-            margin: 0 auto;
-            line-height: 1.8;
+            margin: 0 auto 80px;
+            line-height: 1.7;
         }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
         }
 
         .feature-card {
-            background: rgba(30, 30, 30, 0.6);
-            padding: 40px;
-            border-radius: 12px;
-            border: 1px solid rgba(180, 186, 206, 0.1);
+            background: rgba(30, 30, 30, 0.8);
+            padding: 45px 40px;
+            border-radius: 8px;
+            border: 1px solid rgba(64, 64, 64, 0.3);
             transition: all 0.3s ease;
         }
 
         .feature-card:hover {
-            border-color: rgba(180, 186, 206, 0.3);
             transform: translateY(-5px);
+            border-color: rgba(180, 186, 206, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         }
 
         .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: rgba(180, 186, 206, 0.1);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 25px;
-        }
-
-        .feature-icon svg {
-            width: 32px;
-            height: 32px;
+            width: 50px;
+            height: 50px;
+            margin-bottom: 20px;
             color: #b4bace;
         }
 
         .feature-title {
             font-size: 20px;
-            color: #ffffff;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: #e5e5e5;
             margin-bottom: 15px;
-            font-weight: 600;
         }
 
         .feature-description {
-            font-size: 15px;
+            font-size: 14px;
             color: #999;
-            line-height: 1.7;
+            line-height: 1.8;
         }
 
         /* Products Section */
@@ -351,115 +353,123 @@
 
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 35px;
         }
 
         .product-card {
-            background: rgba(30, 30, 30, 0.6);
-            padding: 40px 30px;
+            background: rgba(30, 30, 30, 0.8);
             border-radius: 12px;
-            border: 1px solid rgba(180, 186, 206, 0.1);
-            text-align: center;
-            transition: all 0.3s ease;
+            border: 1px solid rgba(180, 186, 206, 0.15);
+            overflow: hidden;
+            transition: all 0.4s ease;
         }
 
         .product-card:hover {
-            border-color: rgba(180, 186, 206, 0.3);
-            transform: translateY(-5px);
+            transform: translateY(-8px);
+            border-color: rgba(180, 186, 206, 0.4);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
         }
 
-        .product-card.featured {
-            border-color: #b4bace;
-            position: relative;
+        .product-image {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, rgba(180, 186, 206, 0.2) 0%, rgba(136, 150, 176, 0.1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(180, 186, 206, 0.1);
         }
 
-        .product-badge {
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%);
-            color: #1a1a1a;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 11px;
+        .product-logo {
+            font-size: 42px;
             font-weight: 700;
-            letter-spacing: 1px;
+            letter-spacing: 4px;
+            color: #b4bace;
+            text-shadow: 0 0 30px rgba(180, 186, 206, 0.5);
+        }
+
+        .product-content {
+            padding: 35px;
         }
 
         .product-name {
             font-size: 24px;
-            color: #ffffff;
-            margin-bottom: 15px;
             font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 12px;
             letter-spacing: 1px;
         }
 
-        .product-price {
-            font-size: 42px;
-            color: #b4bace;
-            margin-bottom: 10px;
-            font-weight: 300;
-        }
-
-        .product-period {
+        .product-description {
             font-size: 14px;
-            color: #666;
-            margin-bottom: 30px;
+            color: #999;
+            line-height: 1.7;
+            margin-bottom: 25px;
         }
 
         .product-features {
-            list-style: none;
-            margin-bottom: 35px;
-            text-align: left;
+            margin-bottom: 25px;
         }
 
-        .product-features li {
-            font-size: 14px;
-            color: #ccc;
-            margin-bottom: 12px;
-            padding-left: 25px;
-            position: relative;
+        .product-feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #999;
         }
 
-        .product-features li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
+        .product-feature-item svg {
+            width: 16px;
+            height: 16px;
             color: #b4bace;
-            font-weight: bold;
+            flex-shrink: 0;
         }
 
-        .btn-purchase {
-            width: 100%;
-            padding: 14px;
+        .product-pricing {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 25px;
+            border-top: 1px solid rgba(180, 186, 206, 0.1);
+        }
+
+        .product-price {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+
+        .price-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #b4bace;
+        }
+
+        .price-period {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .product-cta {
+            padding: 12px 24px;
             background: rgba(180, 186, 206, 0.1);
-            border: 1px solid rgba(180, 186, 206, 0.3);
+            border: 1px solid rgba(180, 186, 206, 0.2);
             border-radius: 6px;
-            color: #d9d9d9;
+            color: #b4bace;
             font-size: 13px;
             font-weight: 600;
-            letter-spacing: 1px;
             cursor: pointer;
             transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
         }
 
-        .btn-purchase:hover {
+        .product-cta:hover {
             background: rgba(180, 186, 206, 0.2);
             border-color: #b4bace;
-            color: #ffffff;
-        }
-
-        .product-card.featured .btn-purchase {
-            background: linear-gradient(135deg, #b4bace 0%, #8896b0 100%);
-            border: none;
-            color: #1a1a1a;
-        }
-
-        .product-card.featured .btn-purchase:hover {
-            transform: scale(1.02);
-            box-shadow: 0 5px 15px rgba(180, 186, 206, 0.3);
         }
 
         /* Stats Section */
@@ -467,9 +477,15 @@
             position: relative;
             z-index: 10;
             padding: 80px 40px;
-            max-width: 1200px;
-            margin: 0 auto;
             text-align: center;
+            background: rgba(30, 30, 30, 0.5);
+            border-top: 1px solid rgba(64, 64, 64, 0.3);
+            border-bottom: 1px solid rgba(64, 64, 64, 0.3);
+        }
+
+        .stats-container {
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
         .stats-title {
@@ -580,37 +596,6 @@
             background: rgba(180, 186, 206, 0.1);
             padding: 4px 10px;
             border-radius: 4px;
-        }
-
-        .discord-badge {
-            font-size: 11px;
-            color: #5865F2;
-            background: rgba(88, 101, 242, 0.1);
-            padding: 4px 10px;
-            border-radius: 4px;
-            margin-left: 8px;
-        }
-
-        /* Loading state */
-        .loading-vouches {
-            text-align: center;
-            padding: 60px;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(180, 186, 206, 0.1);
-            border-top-color: #b4bace;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
 
         /* About Section */
@@ -776,44 +761,74 @@
 
         .footer-bottom {
             text-align: center;
-            padding-top: 40px;
-            border-top: 1px solid rgba(64, 64, 64, 0.2);
+            padding-top: 30px;
+            border-top: 1px solid rgba(64, 64, 64, 0.3);
         }
 
         .footer-text {
-            font-size: 13px;
             color: #666;
+            font-size: 13px;
+            letter-spacing: 1px;
         }
 
-        /* Responsive Design */
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .footer-container {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 50px;
+            }
+        }
+
         @media (max-width: 768px) {
             .hero-title {
-                font-size: 48px;
-                letter-spacing: 8px;
+                font-size: 52px;
+                letter-spacing: 4px;
+            }
+
+            .nav-container {
+                padding: 20px 30px;
+            }
+
+            .nav-links {
+                gap: 25px;
+            }
+
+            .nav-links a:not(.btn-nav) {
+                display: none;
+            }
+
+            .features-grid,
+            .products-grid,
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
             }
 
             .section-title {
                 font-size: 36px;
             }
 
-            .about-grid,
-            .footer-container {
-                grid-template-columns: 1fr;
-                gap: 40px;
-            }
-
-            .products-grid,
-            .features-grid,
-            .testimonials-grid {
-                grid-template-columns: 1fr;
+            .cta-title {
+                font-size: 38px;
             }
         }
     </style>
 </head>
 <body>
-    <canvas id="particleCanvas"></canvas>
+    <!-- Corner lights -->
     <div class="light-source light-top-left"></div>
     <div class="light-source light-bottom-right"></div>
+
+    <!-- Particle canvas -->
+    <canvas id="particleCanvas"></canvas>
 
     <!-- Navigation -->
     <nav>
@@ -821,9 +836,10 @@
             <div class="logo">CURSED</div>
             <div class="nav-links">
                 <a href="#features">Features</a>
-                <a href="#products">Pricing</a>
+                <a href="#products">Products</a>
+                <a href="#testimonials">Reviews</a>
                 <a href="#about">About</a>
-                <a href="login.html" class="btn-nav" id="authButton">Login</a>
+                <a href="signup.html" class="btn-nav" id="authButton">Get Started</a>
             </div>
         </div>
     </nav>
@@ -833,217 +849,311 @@
         <div class="hero-content">
             <h1 class="hero-title">CURSED</h1>
             <p class="hero-subtitle">
-                Experience premium performance with cutting-edge technology and unparalleled security.
-                Join our community of users who demand excellence.
+                Industry-leading software with unbeatable results. 
+                        Win your wagers with Confidence
             </p>
             <div class="hero-buttons">
-                <a href="signup.html" class="btn-primary">GET STARTED</a>
-                <a href="#features" class="btn-secondary">LEARN MORE</a>
+                <a href="#products" class="btn-primary">VIEW CURSED PRODUCTS</a>
             </div>
         </div>
     </section>
 
-    <!-- Trust Section -->
-    <section class="trust-section">
-        <div class="trust-text">Trusted by thousands</div>
-        <div class="trust-stats">
-            <div class="trust-stat">
-                <div class="trust-number" id="totalUsers">2,450+</div>
-                <div class="trust-label">Active Users</div>
-            </div>
-            <div class="trust-stat">
-                <div class="trust-number">99.9%</div>
-                <div class="trust-label">Uptime</div>
-            </div>
-            <div class="trust-stat">
-                <div class="trust-number" id="avgRating">4.9</div>
-                <div class="trust-label">Average Rating</div>
-            </div>
-        </div>
-    </section>
 
     <!-- Features Section -->
-    <section class="features-section" id="features">
-        <div class="features-header">
-            <h2 class="section-title">Built For Excellence</h2>
-            <p class="section-subtitle">
-                Designed with performance and security in mind. Our platform combines premium features
-                with seamless user experience.
+    <section class="features-intro" id="features">
+        <div class="section-badge">Why Choose CURSED</div>
+        <h2 class="section-title">Built for Performance & Security</h2>
+        <p class="section-subtitle">
+            Our platform combines cutting-edge hardware authentication with seamless user experience, 
+            giving you the tools you need to succeed while keeping your account completely secure.
+        </p>
+    </section>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+            </svg>
+            <h3 class="feature-title">HARDWARE LOCKED</h3>
+            <p class="feature-description">
+                Each account is permanently bound to your unique hardware ID. Zero account sharing, maximum protection. 
+                Your license stays exactly where it should be - on your machine.
             </p>
         </div>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-                    </svg>
-                </div>
-                <h3 class="feature-title">Hardware-Level Security</h3>
-                <p class="feature-description">
-                    Industry-leading HWID protection ensures your account stays secure with advanced
-                    hardware-level authentication.
-                </p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/>
-                    </svg>
-                </div>
-                <h3 class="feature-title">Instant Access</h3>
-                <p class="feature-description">
-                    No waiting, no delays. Get immediate access to all features the moment you subscribe
-                    with our automated system.
-                </p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
-                    </svg>
-                </div>
-                <h3 class="feature-title">24/7 Support</h3>
-                <p class="feature-description">
-                    Our dedicated support team is always available through Discord to assist you with
-                    any questions or concerns.
-                </p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z"/>
-                    </svg>
-                </div>
-                <h3 class="feature-title">Premium Features</h3>
-                <p class="feature-description">
-                    Access to exclusive features and tools designed to give you the competitive advantage
-                    you need.
-                </p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-                    </svg>
-                </div>
-                <h3 class="feature-title">Regular Updates</h3>
-                <p class="feature-description">
-                    Continuous improvements and new features added regularly to ensure you always have
-                    the latest technology.
-                </p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                </div>
-                <h3 class="feature-title">Verified Results</h3>
-                <p class="feature-description">
-                    Join thousands of satisfied users who have verified our software's exceptional
-                    quality and results.
-                </p>
-            </div>
+
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-1.48 0-2.85.43-4.01 1.17l1.46 1.46C10.21 6.23 11.08 6 12 6c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3 0 1.13-.64 2.11-1.56 2.62l1.45 1.45C23.16 18.16 24 16.68 24 15c0-2.64-2.05-4.78-4.65-4.96z"/>
+            </svg>
+            <h3 class="feature-title">USER FRIENDLY</h3>
+            <p class="feature-description">
+                User friendly interfaces. No complex logins, just pure performance. Get started in seconds with automatized tasks.
+            </p>
         </div>
-    </section>
+
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+            </svg>
+            <h3 class="feature-title">24/7 SUPPORT</h3>
+            <p class="feature-description">
+                Our dedicated support team is available around the clock to assist with any questions or issues. 
+                Fast response times and expert help whenever you need it.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
+            <h3 class="feature-title">FEEDBACKS</h3>
+            <p class="feature-description">
+                Quick and Easy feedbacks, give your ideas, your critics.
+                We're listening and always trying to improve so that YOU can have the best experience.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+            </svg>
+            <h3 class="feature-title">LIGHTNING FAST</h3>
+            <p class="feature-description">
+                Built on modern infrastructure with response times out of the ordinary. Optimized code and efficient 
+                architecture ensure your software runs at peak performance.
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            <h3 class="feature-title">ALWAYS UPDATED</h3>
+            <p class="feature-description">
+                Regular updates with new features, security patches, and performance improvements. 
+                Your software evolves with the latest technology and best techniques.
+            </p>
+        </div>
+    </div>
 
     <!-- Products Section -->
     <section class="products-section" id="products">
         <div class="products-header">
+            <div class="section-badge">Our Products</div>
             <h2 class="section-title">Choose Your Plan</h2>
             <p class="section-subtitle">
-                Select the perfect package for your needs. All plans include full access to our premium features.
+                Premium software packages.
             </p>
         </div>
         <div class="products-grid">
             <div class="product-card">
-                <div class="product-name">Trial</div>
-                <div class="product-price">$5</div>
-                <div class="product-period">3 Days</div>
-                <ul class="product-features">
-                    <li>All features unlocked</li>
-                    <li>Trial only for 5$ / 3 days</li>
-                    <li>Access to Support</li>
-                    <li>Regular Updates</li>
-                </ul>
-                <button class="btn-purchase" data-package="trial">PURCHASE</button>
+                <div class="product-image">
+                    <div class="product-logo">MONTHLY</div>
+                </div>
+                <div class="product-content">
+                    <h3 class="product-name">Monthly Subscribtion</h3>
+                    <p class="product-description">
+                        Get access to CURSED BYPASS for 30 days.
+                    </p>
+                    <div class="product-features">
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                    <div class="product-pricing">
+                        <div class="product-price">
+                            <span class="price-amount">USD$ 20</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                        <button class="product-cta btn-purchase" data-package="monthly">Get Started</button>
+                    </div>
+                </div>
             </div>
-            
+
+    
+
             <div class="product-card">
-                <div class="product-name">Pro</div>
-                <div class="product-price">$30</div>
-                <div class="product-period">Monthly</div>
-                <ul class="product-features">
-                    <li>All Features Unlocked</li>
-                    <li>30 Days of Access</li>
-                    <li>Priority Support</li>
-                    <li>Regular Updates</li>
-                </ul>
-                <button class="btn-purchase" data-package="pro">PURCHASE</button>
-            </div>
-            
-            <div class="product-card featured">
-                <div class="product-badge">BEST VALUE</div>
-                <div class="product-name">Elite</div>
-                <div class="product-price">$100</div>
-                <div class="product-period">90 Days</div>
-                <ul class="product-features">
-                    <li>Everything in Pro</li>
-                    <li>Longer access for better price</li>
-                    <li>90 Days of Access</li>
-                    <li>Exclusive Features</li>
-                    <li>Early Access to Updates</li>
-                </ul>
-                <button class="btn-purchase" data-package="elite">PURCHASE</button>
-            </div>
-            
-            <div class="product-card">
-                <div class="product-name">Lifetime</div>
-                <div class="product-price">$300</div>
-                <div class="product-period">One-time Payment</div>
-                <ul class="product-features">
-                    <li>Everything in Elite</li>
-                    <li>Lifetime Access</li>
-                    <li>No Recurring Payments</li>
-                    <li>VIP Support</li>
-                    <li>Exclusive Community Access</li>
-                </ul>
-                <button class="btn-purchase" data-package="lifetime">PURCHASE</button>
+                <div class="product-image">
+                    <div class="product-logo">LIFETIME</div>
+                </div>
+                <div class="product-content">
+                    <h3 class="product-name">Lifetime Subscribtion</h3>
+                    <p class="product-description">
+                        Get access to CURSED BYPASS forever.
+                    </p>
+                    <div class="product-features">
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Everything in Pro</span>
+                        </div>
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Dedicated account manager</span>
+                        </div>
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Instant HWID reset access</span>
+                        </div>
+                        <div class="product-feature-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Beta access to new features</span>
+                        </div>
+                    </div>
+                    <div class="product-pricing">
+                        <div class="product-price">
+                            <span class="price-amount">USD$ 149</span>
+                            <span class="price-period">/one-time payment</span>
+                        </div>
+                        <button class="product-cta btn-purchase" data-package="lifetime">Get Started</button>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Stats Section -->
-    <section class="stats-section">
-        <h2 class="stats-title">Proven Performance</h2>
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-number">15ms</div>
-                <div class="stat-label">Average Response Time</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">2.4K+</div>
-                <div class="stat-label">Active Users</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">99.9%</div>
-                <div class="stat-label">Satisfaction Rate</div>
-            </div>
-        </div>
-    </section>
 
     <!-- Testimonials Section -->
-    <section class="testimonials-section">
+    <section class="testimonials-section" id="testimonials">
         <div class="testimonials-header">
+            <div class="section-badge">Customer Reviews</div>
             <h2 class="section-title">What Our Users Say</h2>
             <p class="section-subtitle">
-                Real feedback from our community via Discord vouches
+                Don't just take our word for it. See what our customers have to say about their experience.
             </p>
         </div>
-        <div class="testimonials-grid" id="testimonials-container">
-            <div class="loading-vouches">
-                <div class="loading-spinner"></div>
-                <p>Loading vouches from Discord...</p>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "The hardware lock feature is brilliant. No more worrying about account security or unauthorized access. 
+                    Setup was instant and it just works flawlessly."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">Sarah Chen</div>
+                        <div class="author-product">Pro Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "Best investment I've made. The admin dashboard gives me complete control, and the support team 
+                    responds within minutes. Highly recommend for anyone serious about security."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">Marcus Rodriguez</div>
+                        <div class="author-product">Elite Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "Simple, fast, and secure. Everything worked out of the box. The hardware authentication 
+                    gives me peace of mind that my account is truly protected."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">Alex Thompson</div>
+                        <div class="author-product">Starter Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "The performance is incredible. Login is instant, the interface is clean, and I never 
+                    have to worry about downtime. Worth every penny."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">Jamie Lee</div>
+                        <div class="author-product">Pro Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "Switched from another provider and couldn't be happier. The hardware lock is foolproof 
+                    and support has been outstanding. This is the real deal."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">David Park</div>
+                        <div class="author-product">Elite Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <p class="testimonial-text">
+                    "Finally a solution that prioritizes security without sacrificing usability. Clean interface, 
+                    powerful features, and rock-solid reliability."
+                </p>
+                <div class="testimonial-author">
+                    <div>
+                        <div class="author-name">Emma Wilson</div>
+                        <div class="author-product">Pro Package User</div>
+                    </div>
+                    <div class="verified-badge">Verified</div>
+                </div>
             </div>
         </div>
     </section>
@@ -1149,7 +1259,7 @@
     </footer>
 
     <script>
-        // Particle system
+        // Particle system (same as signup page)
         const canvas = document.getElementById('particleCanvas');
         const ctx = canvas.getContext('2d');
         
@@ -1250,9 +1360,11 @@
                 
                 const authButton = document.getElementById('authButton');
                 if (data.loggedIn) {
+                    // User is logged in - show dashboard button
                     authButton.textContent = 'Dashboard';
                     authButton.href = 'dashboard.html';
                 } else {
+                    // User not logged in - show login button  
                     authButton.textContent = 'Login';
                     authButton.href = 'login.html';
                 }
@@ -1263,137 +1375,10 @@
 
         checkSession();
 
-        // Load Discord vouches
-        async function loadVouches() {
-            try {
-                const [vouchesResponse, statsResponse] = await Promise.all([
-                    fetch('/api/vouches/featured'),
-                    fetch('/api/vouches/stats')
-                ]);
-
-                const vouchesData = await vouchesResponse.json();
-                const statsData = await statsResponse.json();
-
-                const container = document.getElementById('testimonials-container');
-                
-                if (vouchesData.success && vouchesData.vouches.length > 0) {
-                    container.innerHTML = '';
-                    
-                    vouchesData.vouches.forEach(vouch => {
-                        const card = document.createElement('div');
-                        card.className = 'testimonial-card';
-                        
-                        const stars = '★'.repeat(vouch.rating);
-                        
-                        card.innerHTML = `
-                            <div class="testimonial-stars">
-                                ${stars.split('').map(() => '<span class="star">★</span>').join('')}
-                            </div>
-                            <p class="testimonial-text">
-                                "${vouch.message}"
-                            </p>
-                            <div class="testimonial-author">
-                                <div>
-                                    <div class="author-name">${vouch.authorUsername}</div>
-                                    <div class="author-product">Verified User</div>
-                                </div>
-                                <div>
-                                    <span class="verified-badge">Verified</span>
-                                    <span class="discord-badge">Discord</span>
-                                </div>
-                            </div>
-                        `;
-                        
-                        container.appendChild(card);
-                    });
-                } else {
-                    // Show default testimonials if no vouches
-                    container.innerHTML = `
-                        <div class="testimonial-card">
-                            <div class="testimonial-stars">
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                            </div>
-                            <p class="testimonial-text">
-                                "Best software I've used. The HWID lock works flawlessly and gives me complete peace 
-                                of mind. Customer support is incredibly responsive."
-                            </p>
-                            <div class="testimonial-author">
-                                <div>
-                                    <div class="author-name">Alex Chen</div>
-                                    <div class="author-product">Lifetime Package User</div>
-                                </div>
-                                <div class="verified-badge">Verified</div>
-                            </div>
-                        </div>
-                        <div class="testimonial-card">
-                            <div class="testimonial-stars">
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                            </div>
-                            <p class="testimonial-text">
-                                "The performance is incredible. Login is instant, the interface is clean, and I never 
-                                have to worry about downtime. Worth every penny."
-                            </p>
-                            <div class="testimonial-author">
-                                <div>
-                                    <div class="author-name">Jamie Lee</div>
-                                    <div class="author-product">Pro Package User</div>
-                                </div>
-                                <div class="verified-badge">Verified</div>
-                            </div>
-                        </div>
-                        <div class="testimonial-card">
-                            <div class="testimonial-stars">
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                                <span class="star">★</span>
-                            </div>
-                            <p class="testimonial-text">
-                                "Switched from another provider and couldn't be happier. The hardware lock is foolproof 
-                                and support has been outstanding. This is the real deal."
-                            </p>
-                            <div class="testimonial-author">
-                                <div>
-                                    <div class="author-name">David Park</div>
-                                    <div class="author-product">Elite Package User</div>
-                                </div>
-                                <div class="verified-badge">Verified</div>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                // Update stats if available
-                if (statsData.success) {
-                    const avgRatingEl = document.getElementById('avgRating');
-                    if (avgRatingEl && statsData.stats.averageRating) {
-                        avgRatingEl.textContent = statsData.stats.averageRating;
-                    }
-                }
-
-            } catch (error) {
-                console.error('Error loading vouches:', error);
-                // Show default content on error
-                const container = document.getElementById('testimonials-container');
-                container.innerHTML = '<p style="text-align: center; color: #666;">Unable to load vouches at this time.</p>';
-            }
-        }
-
-        // Load vouches on page load
-        loadVouches();
-
-        // Stripe Integration
+        // Stripe Integration for Purchase Buttons
         let stripe;
 
+        // Load Stripe publishable key
         async function initializeStripe() {
             try {
                 const response = await fetch('/api/stripe/config');
@@ -1404,26 +1389,32 @@
             }
         }
 
+        // Handle purchase button clicks
         async function handlePurchase(e) {
             const button = e.currentTarget;
             const packageType = button.dataset.package;
 
+            // Check if user is logged in
             const sessionCheck = await fetch('/api/check-session');
             const sessionData = await sessionCheck.json();
 
             if (!sessionData.loggedIn) {
+                // Not logged in - redirect to signup
                 window.location.href = 'signup.html';
                 return;
             }
 
+            // Add loading state
             const originalText = button.textContent;
             button.textContent = 'Loading...';
             button.disabled = true;
 
             try {
+                // First, fetch the packages to get the correct price ID
                 const packagesResponse = await fetch('/api/packages');
                 const packagesData = await packagesResponse.json();
                 
+                // Find the matching package
                 const selectedPackage = packagesData.packages.find(p => p.id === packageType);
                 if (!selectedPackage) {
                     throw new Error('Package not found');
@@ -1442,6 +1433,7 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // Redirect to Stripe Checkout
                     window.location.href = data.url;
                 } else {
                     alert(data.message || 'Failed to create checkout session');
@@ -1456,6 +1448,7 @@
             }
         }
 
+        // Attach event listeners to purchase buttons
         document.addEventListener('DOMContentLoaded', () => {
             initializeStripe();
             
